@@ -1,0 +1,445 @@
+openapi: 3.1.0
+info:
+  title: Finance Tracker API
+  version: 0.1.0
+  description: |
+    Контракт серверной части приложения учёта доходов и расходов.
+
+    В первой версии данные хранятся в браузере, серверные эндпоинты возвращают 501.
+    Этот контракт — граница, по которой вторая версия заменит локальное хранилище на API.
+servers:
+  - url: http://localhost:3000/api
+tags:
+  - name: accounts
+  - name: categories
+  - name: operations
+  - name: reports
+  - name: settings
+paths:
+  /health:
+    get:
+      summary: Проверка доступности сервера
+      responses:
+        '200':
+          description: Сервер доступен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+  /accounts:
+    get:
+      tags: [accounts]
+      summary: Список счетов
+      responses:
+        '200':
+          description: Счета
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+    post:
+      tags: [accounts]
+      summary: Создать счёт
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountInput'
+      responses:
+        '201':
+          description: Созданный счёт
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+  /categories:
+    get:
+      tags: [categories]
+      summary: Список категорий
+      responses:
+        '200':
+          description: Категории
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+    post:
+      tags: [categories]
+      summary: Создать категорию
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryInput'
+      responses:
+        '201':
+          description: Созданная категория
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+  /operations:
+    get:
+      tags: [operations]
+      summary: Список операций с фильтрами
+      parameters:
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: accountId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: categoryId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/OperationType'
+      responses:
+        '200':
+          description: Операции
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Operation'
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+    post:
+      tags: [operations]
+      summary: Создать операцию
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationInput'
+      responses:
+        '201':
+          description: Созданная операция
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Operation'
+        '400':
+          description: Ошибка валидации, например нехватка средств на счёте
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+  /reports:
+    get:
+      tags: [reports]
+      summary: Отчёт за период
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Отчёт с итогами, разбивками и сравнением с предыдущими периодами
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Report'
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+  /settings:
+    get:
+      tags: [settings]
+      summary: Настройки (валюта)
+      responses:
+        '200':
+          description: Настройки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Settings'
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+    put:
+      tags: [settings]
+      summary: Изменить настройки
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Settings'
+      responses:
+        '200':
+          description: Обновлённые настройки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Settings'
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+components:
+  responses:
+    NotImplemented:
+      description: Серверное хранение данных ещё не реализовано
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    Account:
+      type: object
+      required: [id, name, type, initialBalance, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Карта
+        type:
+          type: string
+          example: Карта
+        initialBalance:
+          type: integer
+          description: Минорные единицы
+          example: 500000
+        createdAt:
+          type: string
+          format: date-time
+    AccountInput:
+      type: object
+      required: [name, type, initialBalance]
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        initialBalance:
+          type: integer
+    Category:
+      type: object
+      required: [id, name, kind, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Продукты
+        kind:
+          $ref: '#/components/schemas/CategoryKind'
+        isSeed:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+    CategoryInput:
+      type: object
+      required: [name, kind]
+      properties:
+        name:
+          type: string
+        kind:
+          $ref: '#/components/schemas/CategoryKind'
+    CategoryKind:
+      type: string
+      enum: [income, expense]
+    OperationType:
+      type: string
+      enum: [income, expense, transfer]
+    Operation:
+      type: object
+      required: [id, type, amount, date, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/OperationType'
+        amount:
+          type: integer
+          description: Минорные единицы, всегда больше нуля
+        date:
+          type: string
+          format: date
+        accountId:
+          type: string
+          format: uuid
+          nullable: true
+        targetAccountId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Заполняется только для переводов
+        categoryId:
+          type: string
+          format: uuid
+          nullable: true
+        comment:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    OperationInput:
+      type: object
+      required: [type, amount, date]
+      properties:
+        type:
+          $ref: '#/components/schemas/OperationType'
+        amount:
+          type: integer
+        date:
+          type: string
+          format: date
+        accountId:
+          type: string
+          format: uuid
+          nullable: true
+        targetAccountId:
+          type: string
+          format: uuid
+          nullable: true
+        categoryId:
+          type: string
+          format: uuid
+          nullable: true
+        comment:
+          type: string
+    Report:
+      type: object
+      properties:
+        period:
+          type: object
+          properties:
+            from:
+              type: string
+              format: date
+            to:
+              type: string
+              format: date
+        totals:
+          type: object
+          properties:
+            income:
+              type: integer
+            expense:
+              type: integer
+            transfers:
+              type: integer
+            net:
+              type: integer
+        byCategory:
+          type: array
+          items:
+            type: object
+            properties:
+              categoryId:
+                type: string
+                nullable: true
+              name:
+                type: string
+              income:
+                type: integer
+              expense:
+                type: integer
+              net:
+                type: integer
+        byAccount:
+          type: array
+          items:
+            type: object
+            properties:
+              accountId:
+                type: string
+                nullable: true
+              name:
+                type: string
+              income:
+                type: integer
+              expense:
+                type: integer
+              transfersIn:
+                type: integer
+              transfersOut:
+                type: integer
+        monthly:
+          type: array
+          items:
+            type: object
+            properties:
+              month:
+                type: string
+                example: '2026-03'
+              income:
+                type: integer
+              expense:
+                type: integer
+              transfers:
+                type: integer
+              net:
+                type: integer
+    Settings:
+      type: object
+      required: [currency, version]
+      properties:
+        currency:
+          type: string
+          example: RUB
+        version:
+          type: integer
+          example: 1
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: INSUFFICIENT_FUNDS
+            message:
+              type: string
+              example: Недостаточно средств на счёте «Наличные»
