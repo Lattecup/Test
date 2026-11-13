@@ -130,6 +130,7 @@ export interface Operation {
 
 export interface Settings {
   currency: string; // код валюты, по умолчанию RUB
+  version: number;  // версия формата хранимых данных — для будущих миграций
 }
 ```
 
@@ -139,12 +140,13 @@ export interface Settings {
 `src/domain/operations.ts` — правила предметной области, не зависящие от хранилища:
 
 - `calculateAccountBalance(account, operations): number` — начальный баланс + вклад операций;
-- `validateOperation(op, accounts, existingOperations): ValidationError | null` — проверяет
-  положительность суммы, наличие счёта для операции счёта, различие счетов в переводе и
-  **недостаточный остаток** (для расхода — остаток счёта после операции ≥ 0; для перевода —
-  то же для счёта-источника);
-- `applyOperation(balance, operation)` — вклад операции в остаток: доход `+amount`, расход
-  `−amount`, перевод `−amount` для источника и `+amount` для получателя.
+- `validateOperation(op, accounts, categories, operations, options): string | null` — проверяет
+  положительность суммы, корректность даты, наличие счёта и категории нужного вида, различие
+  счетов в переводе и **недостаточный остаток** (для расхода — остаток счёта после операции ≥ 0;
+  для перевода — то же для счёта-источника); при правке операции её собственный вклад в остаток
+  исключается (`options.excludeOperationId`);
+- `effectOnAccount(operation, accountId)` — вклад операции в остаток счёта: доход `+amount`,
+  расход `−amount`, перевод `−amount` для источника и `+amount` для получателя.
 
 `src/domain/report.ts` — расчёты отчёта, чистые функции над массивом операций:
 
@@ -250,33 +252,75 @@ export interface DataRepository {
 ## Затронутые файлы
 
 ```
+.gitignore
 frontend/package.json
+frontend/package-lock.json
 frontend/tsconfig.json
 frontend/vite.config.ts
+frontend/vitest.config.ts
+frontend/eslint.config.js
 frontend/index.html
 frontend/src/main.tsx
 frontend/src/App.tsx
+frontend/src/styles.css
 frontend/src/domain/types.ts
 frontend/src/domain/money.ts
 frontend/src/domain/operations.ts
 frontend/src/domain/report.ts
+frontend/src/domain/__tests__/money.test.ts
+frontend/src/domain/__tests__/operations.test.ts
+frontend/src/domain/__tests__/report.test.ts
 frontend/src/data/repository.ts
-frontend/src/data/localStorageRepository.ts
 frontend/src/data/storage.ts
+frontend/src/data/localStorageRepository.ts
 frontend/src/data/seedCategories.json
-frontend/src/features/accounts/*
-frontend/src/features/categories/*
-frontend/src/features/operations/*
-frontend/src/features/report/*
-frontend/src/features/settings/*
-frontend/src/ui/*
-frontend/src/**/__tests__/*
+frontend/src/data/__tests__/localStorageRepository.test.ts
+frontend/src/state/appContext.ts
+frontend/src/state/AppProvider.tsx
+frontend/src/ui/Field.tsx
+frontend/src/ui/Modal.tsx
+frontend/src/ui/EmptyState.tsx
+frontend/src/features/accounts/AccountsPage.tsx
+frontend/src/features/categories/CategoriesPage.tsx
+frontend/src/features/operations/OperationsPage.tsx
+frontend/src/features/report/ReportPage.tsx
+frontend/src/features/report/export.ts
+frontend/src/features/settings/SettingsPage.tsx
+frontend/src/__tests__/app.test.tsx
 server/package.json
+server/package-lock.json
 server/tsconfig.json
-server/src/app.ts
+server/eslint.config.js
 server/src/index.ts
-server/src/routes/*
-server/src/services/*
-server/src/repositories/*
+server/src/app.ts
+server/src/domain/types.ts
+server/src/domain/errors.ts
+server/src/routes/index.ts
+server/src/routes/notImplemented.ts
+server/src/services/index.ts
+server/src/repositories/index.ts
+server/src/__tests__/app.test.ts
 server/openapi/openapi.yaml
 ```
+
+## Обоснование решений по результатам разработки
+
+- **Начальный баланс и суммы вводятся в единицах валюты, а хранятся в минорных единицах.** В форме
+  пользователю удобнее видеть «1000», а «100000» копеек в поле ввода выглядит ошибкой; пересчёт в
+  минорные единицы происходит при сохранении, поэтому точность сумм не теряется.
+- **Ошибка «Недостаточно средств» выводится у поля «Сумма», остальные ошибки — над формой.** План
+  говорил только про недостаток средств; остальные проверки не относятся к сумме, и выводить их
+  под этим полем вводило бы в заблуждение.
+- **Операции, потерявшие привязку к удалённому счёту или категории, не влияют на остатки.** У
+  удалённого счёта нет остатка, и операция без счёта не может его изменить; в истории такие записи
+  остаются видимыми и в отчёте попадают в «Без счёта»/«Без категории».
+- **Компонент `Field` связывает подпись с полем через `id`.** Без этого подпись не была связана с
+  элементом формы, и по ней нельзя было ни перейти с клавиатуры, ни найти поле в тестах.
+- **Добавлен тест рендера на jsdom, которого не было в плане.** В окружении нет браузера, поэтому
+  единственный способ проверить, что интерфейс действительно работает, — прогнать сценарии
+  добавления счёта и отказа при нехватке средств в jsdom-окружении.
+- **Графики построены на `recharts`, выгрузка Excel — на `xlsx`, CSV собран вручную.** В плане
+  библиотеки не были названы; CSV собран вручную, потому что для него достаточно разделения «;» и
+  BOM, а внешняя зависимость ради трёх секций отчёта лишняя.
+- **«Итог» в отчёте равен доходам минус расходы; переводы в него не входят.** Переводы — движение
+  своих денег между своими счетами, они выводятся отдельной строкой и не меняют общую картину.

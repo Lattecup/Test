@@ -1,0 +1,12 @@
+[
+  { "name": "Зарплата", "kind": "income" },
+  { "name": "Прочие доходы", "kind": "income" },
+  { "name": "Продукты", "kind": "expense" },
+  { "name": "Транспорт", "kind": "expense" },
+  { "name": "Жильё", "kind": "expense" },
+  { "name": "Коммунальные услуги", "kind": "expense" },
+  { "name": "Здоровье", "kind": "expense" },
+  { "name": "Развлечения", "kind": "expense" },
+  { "name": "Одежда", "kind": "expense" },
+  { "name": "Прочее", "kind": "expense" }
+]
