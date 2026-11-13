@@ -2,7 +2,7 @@
 
 ## Статус
 
-К выполнению
+Выполнено
 
 ## Контекст
 
@@ -301,6 +301,19 @@ server/src/services/index.ts
 server/src/repositories/index.ts
 server/src/__tests__/app.test.ts
 server/openapi/openapi.yaml
+specification/index.md
+specification/increment/index.md
+specification/increment/02.000.00/index.md
+specification/increment/02.000.00/T-1/index.md
+specification/increment/02.000.00/T-1/intent.md
+specification/increment/02.000.00/T-1/increment.md
+specification/increment/02.000.00/T-1/review-report.md
+specification/absolut/index.md
+specification/absolut/01-personal-finance/index.md
+specification/absolut/01-personal-finance/business.md
+specification/absolut/01-personal-finance/storage.md
+specification/absolut/01-personal-finance/api.md
+specification/absolut/01-personal-finance/structure.md
 ```
 
 ## Обоснование решений по результатам разработки
@@ -313,7 +326,9 @@ server/openapi/openapi.yaml
   под этим полем вводило бы в заблуждение.
 - **Операции, потерявшие привязку к удалённому счёту или категории, не влияют на остатки.** У
   удалённого счёта нет остатка, и операция без счёта не может его изменить; в истории такие записи
-  остаются видимыми и в отчёте попадают в «Без счёта»/«Без категории».
+  остаются видимыми и в отчёте попадают в «Без счёта»/«Без категории». Перевод, потерявший одну из
+  сторон, теряет привязку целиком — иначе счёт-получатель получил бы деньги, которых никто не
+  списал.
 - **Компонент `Field` связывает подпись с полем через `id`.** Без этого подпись не была связана с
   элементом формы, и по ней нельзя было ни перейти с клавиатуры, ни найти поле в тестах.
 - **Добавлен тест рендера на jsdom, которого не было в плане.** В окружении нет браузера, поэтому
