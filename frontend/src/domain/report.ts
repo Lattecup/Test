@@ -173,12 +173,14 @@ export function buildReport(
   const monthMap = new Map<string, MonthlyRow>();
 
   const categoryRow = (id: string | null): CategoryRow => {
-    const key = id ?? 'none';
+    // Категория, удалённая из справочника, попадает в ту же строку «Без категории»
+    const known = id ? categoryName.get(id) : undefined;
+    const key = id && known ? id : 'none';
     let row = categoryMap.get(key);
     if (!row) {
       row = {
-        categoryId: id,
-        name: id ? (categoryName.get(id) ?? 'Без категории') : 'Без категории',
+        categoryId: known ? id : null,
+        name: known ?? 'Без категории',
         income: 0,
         expense: 0,
         net: 0,
@@ -189,12 +191,13 @@ export function buildReport(
   };
 
   const accountRow = (id: string | null): AccountRow => {
-    const key = id ?? 'none';
+    const known = id ? accountName.get(id) : undefined;
+    const key = id && known ? id : 'none';
     let row = accountMap.get(key);
     if (!row) {
       row = {
-        accountId: id,
-        name: id ? (accountName.get(id) ?? 'Без счёта') : 'Без счёта',
+        accountId: known ? id : null,
+        name: known ?? 'Без счёта',
         income: 0,
         expense: 0,
         transfersIn: 0,
@@ -239,10 +242,13 @@ export function buildReport(
       }
     } else {
       monthLine.transfers += operation.amount;
-      const source = accountRow(operation.accountId);
-      source.transfersOut += operation.amount;
-      const target = accountRow(operation.targetAccountId);
-      target.transfersIn += operation.amount;
+      // Перевод без одной из сторон не относится ни к одному счёту
+      if (operation.accountId && operation.targetAccountId) {
+        const source = accountRow(operation.accountId);
+        source.transfersOut += operation.amount;
+        const target = accountRow(operation.targetAccountId);
+        target.transfersIn += operation.amount;
+      }
     }
   }
 

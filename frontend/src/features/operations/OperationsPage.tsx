@@ -75,7 +75,12 @@ export function OperationsPage() {
   const filtered = useMemo(() => {
     return operations
       .filter((operation) => operation.date >= filterFrom && operation.date <= filterTo)
-      .filter((operation) => !filterAccount || operation.accountId === filterAccount)
+      .filter(
+        (operation) =>
+          !filterAccount ||
+          operation.accountId === filterAccount ||
+          operation.targetAccountId === filterAccount,
+      )
       .filter((operation) => !filterCategory || operation.categoryId === filterCategory)
       .filter((operation) => !filterType || operation.type === filterType)
       .sort((left, right) =>
@@ -298,9 +303,15 @@ export function OperationsPage() {
             <Field label="Тип операции">
               <select
                 value={form.type}
-                onChange={(event) =>
-                  setForm({ ...form, type: event.target.value as OperationType })
-                }
+                onChange={(event) => {
+                  const type = event.target.value as OperationType;
+                  const selected = categories.find(
+                    (category) => category.id === form.categoryId,
+                  );
+                  const kind = type === 'income' ? 'income' : 'expense';
+                  const fits = type !== 'transfer' && selected?.kind === kind;
+                  setForm({ ...form, type, categoryId: fits ? form.categoryId : '' });
+                }}
               >
                 {Object.entries(TYPE_LABELS).map(([value, label]) => (
                   <option key={value} value={value}>

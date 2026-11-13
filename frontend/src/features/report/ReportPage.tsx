@@ -209,6 +209,7 @@ export function ReportPage() {
                   <th className="num">Расходы</th>
                   <th className="num">Переводы в</th>
                   <th className="num">Переводы из</th>
+                  <th className="num">Итог</th>
                 </tr>
               </thead>
               <tbody>
@@ -219,6 +220,7 @@ export function ReportPage() {
                     <td className="num">{formatMoney(row.expense, settings.currency)}</td>
                     <td className="num">{formatMoney(row.transfersIn, settings.currency)}</td>
                     <td className="num">{formatMoney(row.transfersOut, settings.currency)}</td>
+                    <td className="num">{formatMoney(row.net, settings.currency)}</td>
                   </tr>
                 ))}
               </tbody>

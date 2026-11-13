@@ -8,6 +8,10 @@ export function effectOnAccount(operation: Operation, accountId: string): number
   if (operation.type === 'expense') {
     return operation.accountId === accountId ? -operation.amount : 0;
   }
+  // Перевод без одной из сторон потерял привязку к счетам и не влияет на остатки
+  if (!operation.accountId || !operation.targetAccountId) {
+    return 0;
+  }
   if (operation.accountId === accountId) {
     return -operation.amount;
   }

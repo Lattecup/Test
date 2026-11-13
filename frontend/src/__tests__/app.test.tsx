@@ -71,4 +71,34 @@ describe('приложение', () => {
 
     expect(screen.getByText(/Недостаточно средств/)).toBeTruthy();
   });
+
+  it('показывает переводы, где выбранный счёт — получатель', () => {
+    renderApp('/accounts');
+    const createAccount = (name: string, balance: string) => {
+      fireEvent.click(screen.getByRole('button', { name: 'Добавить счёт' }));
+      fireEvent.change(screen.getByLabelText('Название'), { target: { value: name } });
+      fireEvent.change(screen.getByLabelText('Начальный остаток'), { target: { value: balance } });
+      fireEvent.click(screen.getByRole('button', { name: 'Сохранить' }));
+    };
+    createAccount('Карта', '1000');
+    createAccount('Вклад', '0');
+
+    fireEvent.click(screen.getByRole('link', { name: 'Операции' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Добавить перевод' }));
+    const dialog = screen.getByRole('dialog');
+    fireEvent.change(within(dialog).getByLabelText('Сумма'), { target: { value: '100' } });
+
+    const source = within(dialog).getByLabelText('Счёт-источник') as HTMLSelectElement;
+    fireEvent.change(source, { target: { value: source.options[1].value } });
+    const target = within(dialog).getByLabelText('Счёт-получатель') as HTMLSelectElement;
+    const targetId = target.options[2].value;
+    fireEvent.change(target, { target: { value: targetId } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Сохранить' }));
+
+    const filter = screen.getByLabelText('Счёт') as HTMLSelectElement;
+    fireEvent.change(filter, { target: { value: targetId } });
+
+    const table = screen.getByRole('table');
+    expect(table.textContent).toContain('Вклад');
+  });
 });

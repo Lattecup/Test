@@ -8,8 +8,18 @@ function download(content: BlobPart, fileName: string, type: string): void {
   const link = document.createElement('a');
   link.href = url;
   link.download = fileName;
+  document.body.appendChild(link);
   link.click();
-  URL.revokeObjectURL(url);
+  document.body.removeChild(link);
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+/** Ячейка CSV: значения с разделителем или кавычками берутся в кавычки. */
+function csvCell(value: string): string {
+  if (/[";\r\n]/.test(value)) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
 }
 
 function fileBaseName(report: Report): string {
@@ -30,7 +40,7 @@ export function exportReportToCsv(report: Report): void {
   for (const row of report.byCategory) {
     lines.push(
       [
-        row.name,
+        csvCell(row.name),
         minorToDecimalString(row.income),
         minorToDecimalString(row.expense),
         minorToDecimalString(row.net),
@@ -42,7 +52,7 @@ export function exportReportToCsv(report: Report): void {
   for (const row of report.byAccount) {
     lines.push(
       [
-        row.name,
+        csvCell(row.name),
         minorToDecimalString(row.income),
         minorToDecimalString(row.expense),
         minorToDecimalString(row.transfersIn),
@@ -56,7 +66,7 @@ export function exportReportToCsv(report: Report): void {
   for (const row of report.monthly) {
     lines.push(
       [
-        formatMonth(row.month),
+        csvCell(formatMonth(row.month)),
         minorToDecimalString(row.income),
         minorToDecimalString(row.expense),
         minorToDecimalString(row.transfers),

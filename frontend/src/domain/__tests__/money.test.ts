@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { formatMoney, minorToDecimalString, parseAmountToMinor } from '../money';
+import {
+  formatMoney,
+  minorToDecimalString,
+  parseAmountToMinor,
+  parseSignedAmountToMinor,
+} from '../money';
 
 describe('parseAmountToMinor', () => {
   it('разбирает целое число', () => {
@@ -28,6 +33,20 @@ describe('parseAmountToMinor', () => {
 
   it('отклоняет пустую строку', () => {
     expect(parseAmountToMinor('')).toBeNull();
+  });
+});
+
+describe('parseSignedAmountToMinor', () => {
+  it('разбирает положительную сумму', () => {
+    expect(parseSignedAmountToMinor('1 234,56')).toBe(123456);
+  });
+
+  it('разбирает отрицательную сумму', () => {
+    expect(parseSignedAmountToMinor('-500')).toBe(-50000);
+  });
+
+  it('отклоняет нечисловое значение', () => {
+    expect(parseSignedAmountToMinor('abc')).toBeNull();
   });
 });
 

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { Account } from '../../domain/types';
 import { calculateAccountBalance } from '../../domain/operations';
-import { formatMoney } from '../../domain/money';
+import { formatMoney, parseSignedAmountToMinor } from '../../domain/money';
 import { useApp } from '../../state/appContext';
 import { EmptyState } from '../../ui/EmptyState';
 import { Field } from '../../ui/Field';
@@ -61,8 +61,11 @@ export function AccountsPage() {
       setError('Укажите название счёта');
       return;
     }
-    const initialBalance = form.initialBalance.trim() === '' ? 0 : Number(form.initialBalance.replace(',', '.'));
-    if (!Number.isFinite(initialBalance)) {
+    const initialBalance =
+      form.initialBalance.trim() === ''
+        ? 0
+        : parseSignedAmountToMinor(form.initialBalance);
+    if (initialBalance === null) {
       setError('Начальный остаток должен быть числом');
       return;
     }
@@ -72,7 +75,7 @@ export function AccountsPage() {
       id: form.id ?? crypto.randomUUID(),
       name,
       type: form.type.trim(),
-      initialBalance: Math.round(initialBalance * 100),
+      initialBalance,
       createdAt: existing?.createdAt ?? now,
     });
     setForm(null);

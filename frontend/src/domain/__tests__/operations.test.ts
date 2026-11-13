@@ -64,6 +64,20 @@ describe('calculateAccountBalance', () => {
     expect(calculateAccountBalance(accounts[0], operations)).toBe(70000);
     expect(calculateAccountBalance(accounts[1], operations)).toBe(80000);
   });
+
+  it('не учитывает перевод, потерявший одну из сторон', () => {
+    const operations = [
+      operation({
+        type: 'transfer',
+        amount: 30000,
+        categoryId: null,
+        accountId: null,
+        targetAccountId: 'card',
+      }),
+    ];
+    expect(calculateAccountBalance(accounts[0], operations)).toBe(100000);
+    expect(calculateAccountBalance(accounts[1], operations)).toBe(50000);
+  });
 });
 
 describe('validateOperation', () => {

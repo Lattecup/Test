@@ -46,10 +46,3 @@ export function writeJson(key: string, value: unknown): void {
   }
 }
 
-export function removeKey(key: string): void {
-  const storage = getStorage();
-  if (!storage) {
-    throw new StorageError('Хранилище браузера недоступно.');
-  }
-  storage.removeItem(key);
-}

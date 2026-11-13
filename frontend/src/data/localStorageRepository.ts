@@ -1,6 +1,6 @@
 import type { Account, Category, Operation, Settings } from '../domain/types';
 import type { DataRepository } from './repository';
-import { readJson, removeKey, writeJson } from './storage';
+import { readJson, writeJson } from './storage';
 import seedCategories from './seedCategories.json';
 
 const KEYS = {
@@ -65,11 +65,16 @@ export class LocalStorageRepository implements DataRepository {
     writeJson(KEYS.accounts, accounts);
 
     // История операций сохраняется, но теряет привязку к удалённому счёту
-    const operations = this.listOperations().map((operation) => ({
-      ...operation,
-      accountId: operation.accountId === id ? null : operation.accountId,
-      targetAccountId: operation.targetAccountId === id ? null : operation.targetAccountId,
-    }));
+    const operations = this.listOperations().map((operation) => {
+      if (operation.type === 'transfer') {
+        // Перевод теряет обе стороны целиком, иначе остаётся перевод в одну сторону
+        if (operation.accountId === id || operation.targetAccountId === id) {
+          return { ...operation, accountId: null, targetAccountId: null };
+        }
+        return operation;
+      }
+      return operation.accountId === id ? { ...operation, accountId: null } : operation;
+    });
     writeJson(KEYS.operations, operations);
   }
 
@@ -113,13 +118,5 @@ export class LocalStorageRepository implements DataRepository {
 
   saveSettings(settings: Settings): void {
     writeJson(KEYS.settings, settings);
-  }
-
-  /** Полный сброс — используется в настройках. */
-  clearAll(): void {
-    removeKey(KEYS.accounts);
-    removeKey(KEYS.categories);
-    removeKey(KEYS.operations);
-    removeKey(KEYS.settings);
   }
 }

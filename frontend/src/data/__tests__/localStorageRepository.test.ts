@@ -88,14 +88,14 @@ describe('LocalStorageRepository', () => {
     expect(operations[0].categoryId).toBeNull();
   });
 
-  it('отвязывает счёт-получатель у перевода при удалении счёта', () => {
+  it('отвязывает обе стороны перевода при удалении одного из счетов', () => {
     repository.saveOperation(
       operation({ id: 'op-2', type: 'transfer', targetAccountId: 'acc-2', categoryId: null }),
     );
     repository.removeAccount('acc-2');
     const operations = repository.listOperations();
     expect(operations[0].targetAccountId).toBeNull();
-    expect(operations[0].accountId).toBe('acc-1');
+    expect(operations[0].accountId).toBeNull();
   });
 
   it('перезаписывает операцию с тем же идентификатором', () => {

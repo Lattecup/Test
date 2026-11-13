@@ -95,6 +95,22 @@ describe('buildReport', () => {
     expect(source?.transfersOut).toBe(10000);
     expect(target?.transfersIn).toBe(10000);
   });
+
+  it('не относит перевод без одной из сторон ни к одному счёту', () => {
+    const operations = [
+      operation({
+        id: '1',
+        type: 'transfer',
+        amount: 10000,
+        categoryId: null,
+        accountId: null,
+        targetAccountId: 'card',
+      }),
+    ];
+    const report = buildReport(operations, period, categories, accounts);
+    expect(report.byAccount.find((row) => row.accountId === 'card')?.transfersIn).toBeUndefined();
+    expect(report.totals.transfers).toBe(10000);
+  });
 });
 
 describe('периоды сравнения', () => {
