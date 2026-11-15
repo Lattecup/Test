@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react';
 import type { Account } from '../../domain/types';
 import { calculateAccountBalance } from '../../domain/operations';
-import { formatMoney, parseSignedAmountToMinor } from '../../domain/money';
+import { parseSignedAmountToMinor } from '../../domain/money';
 import { useApp } from '../../state/appContext';
-import { EmptyState } from '../../ui/EmptyState';
+import { Amount } from '../../ui/Amount';
+import { Badge } from '../../ui/Badge';
+import { DataTable } from '../../ui/DataTable';
 import { Field } from '../../ui/Field';
 import { Modal } from '../../ui/Modal';
+import { Truncated } from '../../ui/Truncated';
 
 const ACCOUNT_TYPE_SUGGESTIONS = ['Наличные', 'Карта', 'Вклад', 'Кредитная карта'];
 
@@ -91,26 +94,42 @@ export function AccountsPage() {
       </div>
 
       <div className="card">
-        {accounts.length === 0 ? (
-          <EmptyState message="Счетов пока нет. Заведите первый счёт — например, «Карта»." />
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Название</th>
-                <th>Тип</th>
-                <th className="num">Начальный остаток</th>
-                <th className="num">Текущий остаток</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {accounts.map((account) => (
+        <DataTable emptyMessage="Счетов пока нет. Заведите первый счёт — например, «Карта».">
+          <thead>
+            <tr>
+              <th>Название</th>
+              <th>Тип</th>
+              <th className="num">Начальный остаток</th>
+              <th className="num">Текущий остаток</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {accounts.map((account) => {
+              const balance = balances.get(account.id) ?? 0;
+
+              return (
                 <tr key={account.id}>
-                  <td>{account.name}</td>
-                  <td>{account.type || '—'}</td>
-                  <td className="num">{formatMoney(account.initialBalance, settings.currency)}</td>
-                  <td className="num">{formatMoney(balances.get(account.id) ?? 0, settings.currency)}</td>
+                  <td>
+                    <Truncated value={account.name} maxWidth={220} />
+                  </td>
+                  <td>
+                    {account.type ? (
+                      <Badge variant="neutral">{account.type}</Badge>
+                    ) : (
+                      <span className="amount--neutral">—</span>
+                    )}
+                  </td>
+                  <td className="num">
+                    <Amount minor={account.initialBalance} currency={settings.currency} />
+                  </td>
+                  <td className="num">
+                    <Amount
+                      minor={balance}
+                      currency={settings.currency}
+                      tone={balance < 0 ? 'expense' : 'neutral'}
+                    />
+                  </td>
                   <td className="num">
                     <div className="actions" style={{ justifyContent: 'flex-end' }}>
                       <button className="link" onClick={() => openEdit(account)}>
@@ -122,10 +141,10 @@ export function AccountsPage() {
                     </div>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+              );
+            })}
+          </tbody>
+          </DataTable>
       </div>
 
       {form ? (

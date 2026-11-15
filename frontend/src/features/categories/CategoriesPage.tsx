@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import type { Category, CategoryKind } from '../../domain/types';
 import { useApp } from '../../state/appContext';
-import { EmptyState } from '../../ui/EmptyState';
+import { DataTable } from '../../ui/DataTable';
 import { Field } from '../../ui/Field';
 import { Modal } from '../../ui/Modal';
+import { Truncated } from '../../ui/Truncated';
 
 interface CategoryForm {
   id: string | null;
@@ -54,11 +55,8 @@ export function CategoriesPage() {
 
   const renderTable = (kind: CategoryKind) => {
     const rows = categories.filter((category) => category.kind === kind);
-    if (rows.length === 0) {
-      return <EmptyState message="Категорий пока нет." />;
-    }
     return (
-      <table>
+      <DataTable emptyMessage="Категорий пока нет.">
         <thead>
           <tr>
             <th>Название</th>
@@ -69,7 +67,9 @@ export function CategoriesPage() {
         <tbody>
           {rows.map((category) => (
             <tr key={category.id}>
-              <td>{category.name}</td>
+              <td>
+                <Truncated value={category.name} maxWidth={280} />
+              </td>
               <td>
                 <span className="tag">{category.isSeed ? 'Стартовый набор' : 'Своя'}</span>
               </td>
@@ -86,7 +86,7 @@ export function CategoriesPage() {
             </tr>
           ))}
         </tbody>
-      </table>
+      </DataTable>
     );
   };
 
