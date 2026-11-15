@@ -4,7 +4,6 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  Legend,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -12,7 +11,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { formatMoney } from '../../domain/money';
 import {
   buildComparison,
   buildReport,
@@ -21,11 +19,14 @@ import {
   formatMonth,
 } from '../../domain/report';
 import { useApp } from '../../state/appContext';
+import { Amount } from '../../ui/Amount';
+import { Badge } from '../../ui/Badge';
+import { DataTable } from '../../ui/DataTable';
 import { EmptyState } from '../../ui/EmptyState';
 import { Field } from '../../ui/Field';
+import { Truncated } from '../../ui/Truncated';
+import { chartPalette, palette, shadows } from '../../ui/theme';
 import { exportReportToCsv, exportReportToExcel } from './export';
-
-const CHART_COLORS = ['#1f6f8b', '#2e7d5b', '#b4463c', '#7a6ba8', '#c08a2e', '#4b6bb5', '#8a8f93'];
 
 export function ReportPage() {
   const { operations, categories, accounts, settings } = useApp();
@@ -50,6 +51,17 @@ export function ReportPage() {
     Расходы: row.expense / 100,
   }));
 
+  /** Подложка денежной ячейки — по смыслу движения денег, только для ненулевых значений. */
+  const moneyClass = (value: number, tone: 'income' | 'expense' | 'transfer'): string =>
+    value === 0 ? '' : `money-cell--${tone}`;
+
+  const tooltipStyle = {
+    background: palette.surface,
+    border: `1px solid ${palette.border}`,
+    borderRadius: '10px',
+    boxShadow: shadows.md,
+  };
+
   return (
     <>
       <div className="page-header">
@@ -63,7 +75,7 @@ export function ReportPage() {
       </div>
 
       <div className="card">
-        <div className="row">
+        <div className="row filters">
           <Field label="Период с">
             <input type="date" value={from} onChange={(event) => setFrom(event.target.value)} />
           </Field>
@@ -83,33 +95,43 @@ export function ReportPage() {
       </div>
 
       <div className="grid four" style={{ marginBottom: 18 }}>
-        <div className="stat">
-          <div className="label">Доходы</div>
-          <div className="value amount-income">
-            {formatMoney(report.totals.income, settings.currency)}
+        <div className="stat stat--income">
+          <div className="label">
+            <Badge variant="income">Доходы</Badge>
+          </div>
+          <div className="value">
+            <Amount minor={report.totals.income} currency={settings.currency} tone="income" />
+          </div>
+        </div>
+        <div className="stat stat--expense">
+          <div className="label">
+            <Badge variant="expense">Расходы</Badge>
+          </div>
+          <div className="value">
+            <Amount minor={report.totals.expense} currency={settings.currency} tone="expense" />
+          </div>
+        </div>
+        <div className="stat stat--transfer">
+          <div className="label">
+            <Badge variant="transfer">Переводы</Badge>
+          </div>
+          <div className="value">
+            <Amount minor={report.totals.transfers} currency={settings.currency} tone="transfer" />
           </div>
         </div>
         <div className="stat">
-          <div className="label">Расходы</div>
-          <div className="value amount-expense">
-            {formatMoney(report.totals.expense, settings.currency)}
+          <div className="label">
+            <Badge variant="neutral">Итог</Badge>
           </div>
-        </div>
-        <div className="stat">
-          <div className="label">Переводы</div>
-          <div className="value amount-transfer">
-            {formatMoney(report.totals.transfers, settings.currency)}
+          <div className="value">
+            <Amount minor={report.totals.net} currency={settings.currency} />
           </div>
-        </div>
-        <div className="stat">
-          <div className="label">Итог</div>
-          <div className="value">{formatMoney(report.totals.net, settings.currency)}</div>
         </div>
       </div>
 
       <div className="card">
         <h3>Сравнение с предыдущими периодами</h3>
-        <table>
+        <DataTable>
           <thead>
             <tr>
               <th>Период</th>
@@ -124,10 +146,33 @@ export function ReportPage() {
               <td>
                 Выбранный период ({formatDate(report.period.from)} — {formatDate(report.period.to)})
               </td>
-              <td className="num">{formatMoney(report.totals.income, settings.currency)}</td>
-              <td className="num">{formatMoney(report.totals.expense, settings.currency)}</td>
-              <td className="num">{formatMoney(report.totals.transfers, settings.currency)}</td>
-              <td className="num">{formatMoney(report.totals.net, settings.currency)}</td>
+              <td className="num">
+                <Amount
+                  minor={report.totals.income}
+                  currency={settings.currency}
+                  tone="income"
+                  className={moneyClass(report.totals.income, 'income')}
+                />
+              </td>
+              <td className="num">
+                <Amount
+                  minor={report.totals.expense}
+                  currency={settings.currency}
+                  tone="expense"
+                  className={moneyClass(report.totals.expense, 'expense')}
+                />
+              </td>
+              <td className="num">
+                <Amount
+                  minor={report.totals.transfers}
+                  currency={settings.currency}
+                  tone="transfer"
+                  className={moneyClass(report.totals.transfers, 'transfer')}
+                />
+              </td>
+              <td className="num">
+                <Amount minor={report.totals.net} currency={settings.currency} />
+              </td>
             </tr>
             <tr>
               <td>
@@ -135,15 +180,32 @@ export function ReportPage() {
                 {formatDate(comparison.previousMonthPeriod.to)})
               </td>
               <td className="num">
-                {formatMoney(comparison.previousMonth.income, settings.currency)}
+                <Amount
+                  minor={comparison.previousMonth.income}
+                  currency={settings.currency}
+                  tone="income"
+                  className={moneyClass(comparison.previousMonth.income, 'income')}
+                />
               </td>
               <td className="num">
-                {formatMoney(comparison.previousMonth.expense, settings.currency)}
+                <Amount
+                  minor={comparison.previousMonth.expense}
+                  currency={settings.currency}
+                  tone="expense"
+                  className={moneyClass(comparison.previousMonth.expense, 'expense')}
+                />
               </td>
               <td className="num">
-                {formatMoney(comparison.previousMonth.transfers, settings.currency)}
+                <Amount
+                  minor={comparison.previousMonth.transfers}
+                  currency={settings.currency}
+                  tone="transfer"
+                  className={moneyClass(comparison.previousMonth.transfers, 'transfer')}
+                />
               </td>
-              <td className="num">{formatMoney(comparison.previousMonth.net, settings.currency)}</td>
+              <td className="num">
+                <Amount minor={comparison.previousMonth.net} currency={settings.currency} />
+              </td>
             </tr>
             <tr>
               <td>
@@ -151,20 +213,35 @@ export function ReportPage() {
                 — {formatDate(comparison.previousSameLengthPeriod.to)})
               </td>
               <td className="num">
-                {formatMoney(comparison.previousSameLength.income, settings.currency)}
+                <Amount
+                  minor={comparison.previousSameLength.income}
+                  currency={settings.currency}
+                  tone="income"
+                  className={moneyClass(comparison.previousSameLength.income, 'income')}
+                />
               </td>
               <td className="num">
-                {formatMoney(comparison.previousSameLength.expense, settings.currency)}
+                <Amount
+                  minor={comparison.previousSameLength.expense}
+                  currency={settings.currency}
+                  tone="expense"
+                  className={moneyClass(comparison.previousSameLength.expense, 'expense')}
+                />
               </td>
               <td className="num">
-                {formatMoney(comparison.previousSameLength.transfers, settings.currency)}
+                <Amount
+                  minor={comparison.previousSameLength.transfers}
+                  currency={settings.currency}
+                  tone="transfer"
+                  className={moneyClass(comparison.previousSameLength.transfers, 'transfer')}
+                />
               </td>
               <td className="num">
-                {formatMoney(comparison.previousSameLength.net, settings.currency)}
+                <Amount minor={comparison.previousSameLength.net} currency={settings.currency} />
               </td>
             </tr>
           </tbody>
-        </table>
+        </DataTable>
       </div>
 
       <div className="grid two">
@@ -173,7 +250,7 @@ export function ReportPage() {
           {report.byCategory.length === 0 ? (
             <EmptyState message="За выбранный период операций нет." />
           ) : (
-            <table>
+            <DataTable>
               <thead>
                 <tr>
                   <th>Категория</th>
@@ -185,14 +262,32 @@ export function ReportPage() {
               <tbody>
                 {report.byCategory.map((row) => (
                   <tr key={row.categoryId ?? 'none'}>
-                    <td>{row.name}</td>
-                    <td className="num">{formatMoney(row.income, settings.currency)}</td>
-                    <td className="num">{formatMoney(row.expense, settings.currency)}</td>
-                    <td className="num">{formatMoney(row.net, settings.currency)}</td>
+                    <td>
+                      <Truncated value={row.name} maxWidth={160} />
+                    </td>
+                    <td className="num">
+                      <Amount
+                        minor={row.income}
+                        currency={settings.currency}
+                        tone="income"
+                        className={moneyClass(row.income, 'income')}
+                      />
+                    </td>
+                    <td className="num">
+                      <Amount
+                        minor={row.expense}
+                        currency={settings.currency}
+                        tone="expense"
+                        className={moneyClass(row.expense, 'expense')}
+                      />
+                    </td>
+                    <td className="num">
+                      <Amount minor={row.net} currency={settings.currency} />
+                    </td>
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </DataTable>
           )}
         </div>
 
@@ -201,7 +296,7 @@ export function ReportPage() {
           {report.byAccount.length === 0 ? (
             <EmptyState message="За выбранный период операций нет." />
           ) : (
-            <table>
+            <DataTable>
               <thead>
                 <tr>
                   <th>Счёт</th>
@@ -215,16 +310,48 @@ export function ReportPage() {
               <tbody>
                 {report.byAccount.map((row) => (
                   <tr key={row.accountId ?? 'none'}>
-                    <td>{row.name}</td>
-                    <td className="num">{formatMoney(row.income, settings.currency)}</td>
-                    <td className="num">{formatMoney(row.expense, settings.currency)}</td>
-                    <td className="num">{formatMoney(row.transfersIn, settings.currency)}</td>
-                    <td className="num">{formatMoney(row.transfersOut, settings.currency)}</td>
-                    <td className="num">{formatMoney(row.net, settings.currency)}</td>
+                    <td>
+                      <Truncated value={row.name} maxWidth={140} />
+                    </td>
+                    <td className="num">
+                      <Amount
+                        minor={row.income}
+                        currency={settings.currency}
+                        tone="income"
+                        className={moneyClass(row.income, 'income')}
+                      />
+                    </td>
+                    <td className="num">
+                      <Amount
+                        minor={row.expense}
+                        currency={settings.currency}
+                        tone="expense"
+                        className={moneyClass(row.expense, 'expense')}
+                      />
+                    </td>
+                    <td className="num">
+                      <Amount
+                        minor={row.transfersIn}
+                        currency={settings.currency}
+                        tone="transfer"
+                        className={moneyClass(row.transfersIn, 'transfer')}
+                      />
+                    </td>
+                    <td className="num">
+                      <Amount
+                        minor={row.transfersOut}
+                        currency={settings.currency}
+                        tone="transfer"
+                        className={moneyClass(row.transfersOut, 'transfer')}
+                      />
+                    </td>
+                    <td className="num">
+                      <Amount minor={row.net} currency={settings.currency} />
+                    </td>
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </DataTable>
           )}
         </div>
       </div>
@@ -234,7 +361,7 @@ export function ReportPage() {
         {monthlyChart.length === 0 ? (
           <EmptyState message="За выбранный период операций нет." />
         ) : (
-          <table>
+          <DataTable>
             <thead>
               <tr>
                 <th>Месяц</th>
@@ -248,14 +375,37 @@ export function ReportPage() {
               {report.monthly.map((row) => (
                 <tr key={row.month}>
                   <td>{formatMonth(row.month)}</td>
-                  <td className="num">{formatMoney(row.income, settings.currency)}</td>
-                  <td className="num">{formatMoney(row.expense, settings.currency)}</td>
-                  <td className="num">{formatMoney(row.transfers, settings.currency)}</td>
-                  <td className="num">{formatMoney(row.net, settings.currency)}</td>
+                  <td className="num">
+                    <Amount
+                      minor={row.income}
+                      currency={settings.currency}
+                      tone="income"
+                      className={moneyClass(row.income, 'income')}
+                    />
+                  </td>
+                  <td className="num">
+                    <Amount
+                      minor={row.expense}
+                      currency={settings.currency}
+                      tone="expense"
+                      className={moneyClass(row.expense, 'expense')}
+                    />
+                  </td>
+                  <td className="num">
+                    <Amount
+                      minor={row.transfers}
+                      currency={settings.currency}
+                      tone="transfer"
+                      className={moneyClass(row.transfers, 'transfer')}
+                    />
+                  </td>
+                  <td className="num">
+                    <Amount minor={row.net} currency={settings.currency} />
+                  </td>
                 </tr>
               ))}
             </tbody>
-          </table>
+          </DataTable>
         )}
       </div>
 
@@ -266,15 +416,24 @@ export function ReportPage() {
               <h3>Доходы и расходы по месяцам</h3>
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={monthlyChart}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" fontSize={12} />
-                  <YAxis fontSize={12} />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="Доходы" fill="#2e7d5b" />
-                  <Bar dataKey="Расходы" fill="#b4463c" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={palette.border} />
+                  <XAxis dataKey="name" fontSize={12} stroke={palette.muted} />
+                  <YAxis fontSize={12} stroke={palette.muted} />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Bar dataKey="Доходы" fill={palette.income} radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Расходы" fill={palette.expense} radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
+              <div className="legend">
+                <span className="legend-item">
+                  <span className="legend-dot" style={{ background: palette.income }} />
+                  Доходы
+                </span>
+                <span className="legend-item">
+                  <span className="legend-dot" style={{ background: palette.expense }} />
+                  Расходы
+                </span>
+              </div>
             </div>
           ) : null}
 
@@ -289,18 +448,27 @@ export function ReportPage() {
                     nameKey="name"
                     innerRadius={50}
                     outerRadius={90}
+                    stroke={palette.surface}
+                    strokeWidth={2}
                   >
                     {expenseByCategory.map((entry, index) => (
-                      <Cell
-                        key={entry.name}
-                        fill={CHART_COLORS[index % CHART_COLORS.length]}
-                      />
+                      <Cell key={entry.name} fill={chartPalette[index % chartPalette.length]} />
                     ))}
                   </Pie>
-                  <Tooltip />
-                  <Legend />
+                  <Tooltip contentStyle={tooltipStyle} />
                 </PieChart>
               </ResponsiveContainer>
+              <div className="legend">
+                {expenseByCategory.map((entry, index) => (
+                  <span className="legend-item" key={entry.name}>
+                    <span
+                      className="legend-dot"
+                      style={{ background: chartPalette[index % chartPalette.length] }}
+                    />
+                    {entry.name}
+                  </span>
+                ))}
+              </div>
             </div>
           ) : null}
         </div>

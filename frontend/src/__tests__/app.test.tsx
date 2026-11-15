@@ -101,4 +101,67 @@ describe('приложение', () => {
     const table = screen.getByRole('table');
     expect(table.textContent).toContain('Вклад');
   });
+
+  it('показывает плашку вида операции и знак суммы', () => {
+    renderApp('/accounts');
+    fireEvent.click(screen.getByRole('button', { name: 'Добавить счёт' }));
+    fireEvent.change(screen.getByLabelText('Название'), { target: { value: 'Карта' } });
+    fireEvent.change(screen.getByLabelText('Начальный остаток'), { target: { value: '1000' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Сохранить' }));
+
+    fireEvent.click(screen.getByRole('link', { name: 'Операции' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Добавить расход' }));
+    const dialog = screen.getByRole('dialog');
+    fireEvent.change(within(dialog).getByLabelText('Сумма'), { target: { value: '100' } });
+
+    const accountSelect = within(dialog).getByLabelText('Счёт') as HTMLSelectElement;
+    fireEvent.change(accountSelect, { target: { value: accountSelect.options[1].value } });
+
+    const categorySelect = within(dialog).getByLabelText('Категория') as HTMLSelectElement;
+    fireEvent.change(categorySelect, { target: { value: categorySelect.options[1].value } });
+    fireEvent.click(screen.getByRole('button', { name: 'Сохранить' }));
+
+    const table = screen.getByRole('table');
+    const badge = within(table).getByText('Расход');
+    expect(badge.className).toContain('badge--expense');
+    // Знак операции сохраняется — смысл не читается только цветом
+    expect(within(table).getByText('−').className).toContain('amount__sign');
+  });
+
+  it('оставляет полное название в подсказке, если оно обрезано', () => {
+    const longName = 'Кредитная карта с очень длинным названием банка';
+    renderApp('/accounts');
+    fireEvent.click(screen.getByRole('button', { name: 'Добавить счёт' }));
+    fireEvent.change(screen.getByLabelText('Название'), { target: { value: longName } });
+    fireEvent.click(screen.getByRole('button', { name: 'Сохранить' }));
+
+    const cell = screen.getByTitle(longName);
+    expect(cell.textContent).toBe(longName);
+  });
+
+  it('выделяет денежные ячейки отчёта по смыслу движения денег', () => {
+    renderApp('/accounts');
+    fireEvent.click(screen.getByRole('button', { name: 'Добавить счёт' }));
+    fireEvent.change(screen.getByLabelText('Название'), { target: { value: 'Карта' } });
+    fireEvent.change(screen.getByLabelText('Начальный остаток'), { target: { value: '1000' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Сохранить' }));
+
+    fireEvent.click(screen.getByRole('link', { name: 'Операции' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Добавить доход' }));
+    const dialog = screen.getByRole('dialog');
+    fireEvent.change(within(dialog).getByLabelText('Сумма'), { target: { value: '500' } });
+
+    const accountSelect = within(dialog).getByLabelText('Счёт') as HTMLSelectElement;
+    fireEvent.change(accountSelect, { target: { value: accountSelect.options[1].value } });
+
+    const categorySelect = within(dialog).getByLabelText('Категория') as HTMLSelectElement;
+    fireEvent.change(categorySelect, { target: { value: categorySelect.options[1].value } });
+    fireEvent.click(screen.getByRole('button', { name: 'Сохранить' }));
+
+    fireEvent.click(screen.getByRole('link', { name: 'Отчёт' }));
+
+    const incomeCell = document.querySelector('.money-cell--income');
+    expect(incomeCell).toBeTruthy();
+    expect(incomeCell?.textContent).toContain('500');
+  });
 });

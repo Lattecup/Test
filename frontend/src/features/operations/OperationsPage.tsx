@@ -1,12 +1,16 @@
 import { useMemo, useState } from 'react';
 import type { Operation, OperationType } from '../../domain/types';
 import { validateOperation } from '../../domain/operations';
-import { formatMoney, parseAmountToMinor } from '../../domain/money';
+import { parseAmountToMinor } from '../../domain/money';
 import { currentMonthPeriod, formatDate } from '../../domain/report';
 import { useApp } from '../../state/appContext';
+import { Amount } from '../../ui/Amount';
+import { Badge, type BadgeVariant } from '../../ui/Badge';
+import { DataTable } from '../../ui/DataTable';
 import { EmptyState } from '../../ui/EmptyState';
 import { Field } from '../../ui/Field';
 import { Modal } from '../../ui/Modal';
+import { Truncated } from '../../ui/Truncated';
 
 const TYPE_LABELS: Record<OperationType, string> = {
   income: 'Доход',
@@ -14,10 +18,16 @@ const TYPE_LABELS: Record<OperationType, string> = {
   transfer: 'Перевод',
 };
 
-const TYPE_CLASSES: Record<OperationType, string> = {
-  income: 'amount-income',
-  expense: 'amount-expense',
-  transfer: 'amount-transfer',
+const TYPE_VARIANTS: Record<OperationType, BadgeVariant> = {
+  income: 'income',
+  expense: 'expense',
+  transfer: 'transfer',
+};
+
+const TYPE_SIGNS: Record<OperationType, '+' | '−' | '→'> = {
+  income: '+',
+  expense: '−',
+  transfer: '→',
 };
 
 interface OperationForm {
@@ -172,7 +182,7 @@ export function OperationsPage() {
       </div>
 
       <div className="card">
-        <div className="row">
+        <div className="row filters">
           <Field label="Период с">
             <input
               type="date"
@@ -230,12 +240,12 @@ export function OperationsPage() {
         {filtered.length === 0 ? (
           <EmptyState message="За выбранный период операций нет." />
         ) : (
-          <table>
+          <DataTable>
             <thead>
               <tr>
                 <th>Дата</th>
                 <th>Тип</th>
-                <th>Сумма</th>
+                <th className="num">Сумма</th>
                 <th>Счёт</th>
                 <th>Категория</th>
                 <th>Комментарий</th>
@@ -243,42 +253,62 @@ export function OperationsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((operation) => (
-                <tr key={operation.id}>
-                  <td>{formatDate(operation.date)}</td>
-                  <td>{TYPE_LABELS[operation.type]}</td>
-                  <td className={`num ${TYPE_CLASSES[operation.type]}`}>
-                    {operation.type === 'expense' ? '−' : operation.type === 'income' ? '+' : '→'}{' '}
-                    {formatMoney(operation.amount, settings.currency)}
-                  </td>
-                  <td>
-                    {operation.accountId
-                      ? (accountName.get(operation.accountId) ?? 'Без счёта')
-                      : 'Без счёта'}
-                    {operation.type === 'transfer' && operation.targetAccountId ? (
-                      <span> → {accountName.get(operation.targetAccountId) ?? 'Без счёта'}</span>
-                    ) : null}
-                  </td>
-                  <td>
-                    {operation.categoryId
-                      ? (categoryName.get(operation.categoryId) ?? 'Без категории')
-                      : 'Без категории'}
-                  </td>
-                  <td>{operation.comment}</td>
-                  <td className="num">
-                    <div className="actions" style={{ justifyContent: 'flex-end' }}>
-                      <button className="link" onClick={() => openEdit(operation)}>
-                        Изменить
-                      </button>
-                      <button className="link" onClick={() => setPendingRemoval(operation)}>
-                        Удалить
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {filtered.map((operation) => {
+                const source = operation.accountId
+                  ? (accountName.get(operation.accountId) ?? 'Без счёта')
+                  : 'Без счёта';
+                const target =
+                  operation.type === 'transfer' && operation.targetAccountId
+                    ? (accountName.get(operation.targetAccountId) ?? 'Без счёта')
+                    : null;
+                const category = operation.categoryId
+                  ? (categoryName.get(operation.categoryId) ?? 'Без категории')
+                  : 'Без категории';
+
+                return (
+                  <tr key={operation.id}>
+                    <td>{formatDate(operation.date)}</td>
+                    <td>
+                      <Badge variant={TYPE_VARIANTS[operation.type]}>
+                        {TYPE_LABELS[operation.type]}
+                      </Badge>
+                    </td>
+                    <td className="num">
+                      <Amount
+                        minor={operation.amount}
+                        currency={settings.currency}
+                        tone={TYPE_VARIANTS[operation.type]}
+                        prefix={TYPE_SIGNS[operation.type]}
+                      />
+                    </td>
+                    <td>
+                      {target ? (
+                        <Truncated value={`${source} → ${target}`} maxWidth={200} />
+                      ) : (
+                        <Truncated value={source} maxWidth={200} />
+                      )}
+                    </td>
+                    <td>
+                      <Truncated value={category} maxWidth={160} />
+                    </td>
+                    <td>
+                      <Truncated value={operation.comment} maxWidth={220} />
+                    </td>
+                    <td className="num">
+                      <div className="actions" style={{ justifyContent: 'flex-end' }}>
+                        <button className="link" onClick={() => openEdit(operation)}>
+                          Изменить
+                        </button>
+                        <button className="link" onClick={() => setPendingRemoval(operation)}>
+                          Удалить
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
-          </table>
+          </DataTable>
         )}
       </div>
 

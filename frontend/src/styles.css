@@ -1,16 +1,68 @@
+/* Шрифт лежит в репозитории: приложение не обращается к внешним ресурсам за шрифтами. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('./assets/fonts/Inter-cyrillic-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url('./assets/fonts/Inter-cyrillic-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url('./assets/fonts/Inter-cyrillic-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url('./assets/fonts/Inter-cyrillic-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('./assets/fonts/Inter-latin-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url('./assets/fonts/Inter-latin-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url('./assets/fonts/Inter-latin-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url('./assets/fonts/Inter-latin-700.woff2') format('woff2');
+}
+
 :root {
-  --bg: #f4f6f8;
-  --surface: #ffffff;
-  --border: #d9dee3;
-  --text: #1c2529;
-  --muted: #667076;
-  --accent: #1f6f8b;
-  --accent-dark: #17566c;
-  --income: #2e7d5b;
-  --expense: #b4463c;
-  --transfer: #7a6ba8;
-  --danger: #b4463c;
-  --radius: 8px;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 15px;
+  --text-lg: 17px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
 }
 
 * {
@@ -21,10 +73,13 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-  font-size: 15px;
-  line-height: 1.45;
+  font-family: var(--font-family);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
+
+/* --- Каркас --- */
 
 .app {
   display: flex;
@@ -32,43 +87,63 @@ body {
 }
 
 .sidebar {
-  width: 220px;
-  padding: 20px 16px;
+  width: 232px;
+  padding: 22px 14px;
   background: var(--surface);
   border-right: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
   flex-shrink: 0;
 }
 
 .sidebar h1 {
-  font-size: 17px;
-  margin: 0 0 20px;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 6px 22px;
 }
 
 .sidebar nav {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .sidebar nav a {
-  padding: 8px 10px;
-  border-radius: var(--radius);
-  color: var(--text);
+  position: relative;
+  padding: 9px 12px;
+  border-radius: var(--radius-md);
+  color: var(--muted);
+  font-weight: 500;
   text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .sidebar nav a:hover {
-  background: var(--bg);
+  background: var(--surface-muted);
+  color: var(--text);
 }
 
 .sidebar nav a.active {
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+  font-weight: 600;
+}
+
+.sidebar nav a.active::before {
+  content: '';
+  position: absolute;
+  left: -14px;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
   background: var(--accent);
-  color: #fff;
 }
 
 .content {
   flex: 1;
-  padding: 24px 28px;
+  min-width: 0;
+  padding: 26px 30px;
   max-width: 1200px;
 }
 
@@ -77,25 +152,36 @@ body {
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 22px;
 }
 
 .page-header h2 {
   margin: 0;
-  font-size: 22px;
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
+
+/* --- Блоки --- */
 
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 18px;
   margin-bottom: 18px;
 }
 
 .card h3 {
-  margin: 0 0 12px;
-  font-size: 16px;
+  margin: 0 0 14px;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.card p {
+  color: var(--muted);
 }
 
 .grid {
@@ -111,6 +197,66 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
 }
 
+.stat {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 16px 18px;
+  overflow: hidden;
+  container-type: inline-size;
+}
+
+.stat::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--accent);
+}
+
+.stat--income::before {
+  background: var(--income);
+}
+
+.stat--expense::before {
+  background: var(--expense);
+}
+
+.stat--transfer::before {
+  background: var(--transfer);
+}
+
+.stat .label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.stat .value {
+  /* Сумма не помещается — уменьшается кегль, но не обрезается и не переносится. */
+  font-size: clamp(15px, 9cqi, var(--text-2xl));
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 6px;
+  white-space: nowrap;
+}
+
+/* --- Таблицы --- */
+
+.table-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.table-scroll > table {
+  min-width: 100%;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -119,15 +265,31 @@ table {
 th,
 td {
   text-align: left;
-  padding: 8px 10px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--border);
-  vertical-align: top;
+  vertical-align: middle;
 }
 
-th {
-  font-size: 13px;
+thead th {
+  font-size: var(--text-xs);
   color: var(--muted);
   font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: var(--surface-muted);
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+tbody tr {
+  transition: background 0.12s ease;
+}
+
+tbody tr:hover {
+  background: var(--surface-muted);
 }
 
 td.num,
@@ -136,50 +298,110 @@ th.num {
   white-space: nowrap;
 }
 
-.amount-income {
+.truncate {
+  display: inline-block;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+/* --- Деньги --- */
+
+.amount {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.amount__sign {
+  display: inline-block;
+  margin-right: 4px;
+  font-weight: 700;
+}
+
+.amount--income {
   color: var(--income);
 }
 
-.amount-expense {
+.amount--expense {
   color: var(--expense);
 }
 
-.amount-transfer {
+.amount--transfer {
   color: var(--transfer);
 }
 
-.stat {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px 16px;
+.amount--neutral {
+  color: var(--text);
 }
 
-.stat .label {
-  font-size: 13px;
-  color: var(--muted);
+/* Денежная ячейка таблицы отчёта: подложка по смыслу движения денег. */
+.money-cell--income {
+  background: var(--income-soft);
 }
 
-.stat .value {
-  font-size: 22px;
+.money-cell--expense {
+  background: var(--expense-soft);
+}
+
+.money-cell--transfer {
+  background: var(--transfer-soft);
+}
+
+/* --- Плашки --- */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: var(--text-xs);
   font-weight: 600;
-  margin-top: 4px;
+  line-height: 1.6;
+  white-space: nowrap;
 }
+
+.badge--income {
+  color: var(--income);
+  background: var(--income-soft);
+}
+
+.badge--expense {
+  color: var(--expense);
+  background: var(--expense-soft);
+}
+
+.badge--transfer {
+  color: var(--transfer);
+  background: var(--transfer-soft);
+}
+
+.badge--neutral {
+  color: var(--muted);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+}
+
+/* --- Формы --- */
 
 form.stack {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
 }
 
 .field label {
-  font-size: 13px;
+  font-size: var(--text-sm);
+  font-weight: 500;
   color: var(--muted);
 }
 
@@ -187,29 +409,38 @@ input,
 select,
 textarea {
   font: inherit;
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: #fff;
   color: var(--text);
+  padding: 9px 11px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
   width: 100%;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+  opacity: 0.7;
 }
 
 input:focus,
 select:focus,
 textarea:focus {
-  outline: 2px solid rgba(31, 111, 139, 0.35);
+  outline: none;
   border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .field .error {
   color: var(--danger);
-  font-size: 13px;
+  font-size: var(--text-sm);
+  font-weight: 500;
 }
 
 .row {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   flex-wrap: wrap;
   align-items: flex-end;
 }
@@ -218,52 +449,91 @@ textarea:focus {
   flex: 1 1 180px;
 }
 
-button {
-  font: inherit;
-  padding: 8px 14px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: #fff;
-  color: var(--text);
-  cursor: pointer;
+/* Ряд фильтров: поля не растягиваются на всю ширину, если переносятся на новую строку. */
+.row.filters {
+  justify-content: flex-start;
 }
 
-button:hover {
-  background: var(--bg);
-}
-
-button.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-}
-
-button.primary:hover {
-  background: var(--accent-dark);
-}
-
-button.danger {
-  color: var(--danger);
-  border-color: #e3c4c0;
-}
-
-button.link {
-  border: none;
-  background: none;
-  color: var(--accent);
-  padding: 4px 6px;
+.row.filters > .field {
+  flex: 0 1 220px;
 }
 
 .actions {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  align-items: center;
 }
+
+/* --- Кнопки --- */
+
+button {
+  font: inherit;
+  font-weight: 500;
+  padding: 9px 15px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease,
+    transform 0.1s ease;
+}
+
+button:hover {
+  background: var(--surface-muted);
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  box-shadow: var(--shadow-md);
+}
+
+button.primary:hover {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+}
+
+button.danger {
+  color: var(--danger);
+  border-color: var(--danger-border);
+  background: var(--surface);
+}
+
+button.danger:hover {
+  background: var(--danger-soft);
+}
+
+button.link {
+  border: none;
+  background: none;
+  box-shadow: none;
+  color: var(--accent);
+  padding: 4px 8px;
+}
+
+button.link:hover {
+  background: var(--accent-soft);
+}
+
+/* --- Модальные окна --- */
 
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(20, 28, 32, 0.45);
+  background: rgba(22, 33, 42, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -273,8 +543,9 @@ button.link {
 
 .modal {
   background: var(--surface);
-  border-radius: var(--radius);
-  padding: 20px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 22px;
   width: 100%;
   max-width: 520px;
   max-height: 90vh;
@@ -282,36 +553,53 @@ button.link {
 }
 
 .modal h3 {
-  margin: 0 0 12px;
+  margin: 0 0 14px;
+  font-size: var(--text-xl);
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
+
+/* --- Сообщения и пустые состояния --- */
 
 .empty {
   color: var(--muted);
-  padding: 18px 0;
+  padding: 26px 18px;
   text-align: center;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-muted);
 }
 
 .banner {
-  background: #fdecea;
-  border: 1px solid #e3c4c0;
+  background: var(--danger-soft);
+  border: 1px solid var(--danger-border);
   color: var(--danger);
-  border-radius: var(--radius);
-  padding: 10px 14px;
-  margin-bottom: 16px;
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-bottom: 18px;
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.banner span {
+  font-weight: 500;
 }
 
 .tag {
   display: inline-block;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 999px;
-  background: var(--bg);
+  background: var(--surface-muted);
   border: 1px solid var(--border);
-  font-size: 12px;
+  font-size: var(--text-xs);
+  font-weight: 500;
   color: var(--muted);
 }
+
+/* --- Графики --- */
 
 .charts {
   display: grid;
@@ -322,18 +610,21 @@ button.link {
 .legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 8px;
-  font-size: 13px;
+  gap: 8px 16px;
+  margin-top: 10px;
+  font-size: var(--text-sm);
   color: var(--muted);
 }
 
-.legend span::before {
-  content: '';
-  display: inline-block;
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.legend-dot {
   width: 10px;
   height: 10px;
-  border-radius: 2px;
-  margin-right: 6px;
-  background: var(--dot-color, var(--accent));
+  border-radius: 3px;
+  flex: none;
 }

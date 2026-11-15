@@ -212,6 +212,9 @@ interface BadgeProps { variant: BadgeVariant; children: ReactNode; }
 - `frontend/src/App.tsx` — оформление бокового меню, панели уведомления (`banner`) и области
   контента.
 
+  Фактически правки в этих двух файлах не потребовались: их вид определяется классами из
+  `styles.css` (`card`, `stack`, `actions`, `banner`, `tag`), которые переписаны в рамках редизайна.
+
 ### Frontend — графики
 
 Цвета `recharts` берутся из `theme.ts`; у `Tooltip` — единый стиль (поверхность, рамка, тень);
@@ -244,25 +247,68 @@ interface BadgeProps { variant: BadgeVariant; children: ReactNode; }
 ## Затронутые файлы
 
 ```
+frontend/package.json
+frontend/package-lock.json
+frontend/src/assets/fonts/Inter-cyrillic-400.woff2
+frontend/src/assets/fonts/Inter-cyrillic-500.woff2
+frontend/src/assets/fonts/Inter-cyrillic-600.woff2
+frontend/src/assets/fonts/Inter-cyrillic-700.woff2
+frontend/src/assets/fonts/Inter-latin-400.woff2
+frontend/src/assets/fonts/Inter-latin-500.woff2
+frontend/src/assets/fonts/Inter-latin-600.woff2
+frontend/src/assets/fonts/Inter-latin-700.woff2
+frontend/src/assets/fonts/Inter-LICENSE.txt
 frontend/src/ui/theme.ts
 frontend/src/ui/Badge.tsx
 frontend/src/ui/Amount.tsx
 frontend/src/ui/DataTable.tsx
+frontend/src/ui/Truncated.tsx
 frontend/src/styles.css
 frontend/src/main.tsx
-frontend/src/App.tsx
-frontend/src/assets/fonts/Inter-Regular.woff2
-frontend/src/assets/fonts/Inter-Medium.woff2
-frontend/src/assets/fonts/Inter-SemiBold.woff2
-frontend/src/assets/fonts/Inter-Bold.woff2
 frontend/src/features/operations/OperationsPage.tsx
 frontend/src/features/accounts/AccountsPage.tsx
 frontend/src/features/categories/CategoriesPage.tsx
 frontend/src/features/report/ReportPage.tsx
-frontend/src/features/settings/SettingsPage.tsx
 frontend/src/__tests__/app.test.tsx
-specification/increment/02.000.00/T-2/index.md
 specification/increment/02.000.00/T-2/increment.md
-specification/increment/02.000.00/T-2/intent.md
-specification/increment/02.000.00/index.md
 ```
+
+## Обоснование решений по результатам разработки
+
+- **Единый источник цветов сделан на TypeScript-модуле `ui/theme.ts`, а не на CSS-переменных в
+  `styles.css`.** CSS-блок `:root` остался бы вторым источником правды (а именно из-за двух
+  источников палитра и разъезжалась: CSS и захардкоженные цвета в `ReportPage`). Модуль отдаёт
+  значения и в CSS-переменные на `:root` (выставляются в `main.tsx` до первого рендера), и напрямую
+  в `recharts` — теперь палитра одна и для интерфейса, и для графиков.
+- **Файлы шрифта взяты из npm-пакета `@fontsource/inter` (SIL Open Font License) и положены в
+  `frontend/src/assets/fonts/`.** Пакет оставлен в `devDependencies`: приложение не тянет шрифт из
+  сети, но исходные файлы воспроизводимы и обновляемы одной командой. В репозиторий попали только
+  нужные начертания (400/500/600/700) и два подмножества — кириллица и латиница: без кириллицы русские
+  подписи откатились бы на системный шрифт.
+- **Кегль итоговой суммы уменьшается контейнерным запросом, а не медиазапросом.** Медиазапрос реагирует
+  на ширину окна, а карточки итогов стоят в сетке разной ширины (`.grid.four` — четыре колонки,
+  `.grid.two` — две), поэтому одинаковая сумма в разных карточках требовала бы разного кегля.
+  `container-type: inline-size` на `.stat` и `font-size: clamp(15px, 9cqi, 24px)` на значении решают
+  это по ширине самой карточки; проверено — на карточке шириной 274px сумма «4 938 271,56 RUB»
+  укладывается в 17,73px.
+- **Встроенная легенда `recharts` заменена на собственную.** Встроенная рисует иконку каждого элемента
+  одним цветом из палитры библиотеки, задать ей цвет по категории нельзя — именно поэтому точки
+  легенды раньше не совпадали с секторами диаграммы. Собственная легенда берёт цвета из `theme.ts`
+  и совпадает с цветами ячеек по построению.
+- **Плашки в таблицах отчёта сделаны цветной подложкой ячейки, а не чипом с текстом.** В плотной
+  таблице чип с подписью в каждой денежной ячейке рябил бы и удорожал чтение; подложка по смыслу
+  колонки (доходы — зелёная, расходы — красная, переводы — фиолетовая) даёт тот же смысл и остаётся
+  в согласии с решением «плашки везде». Подложка ставится только ненулевым значениям, иначе таблица
+  пестрела бы пустыми ячейками.
+- **Список операций и блоки «По категориям»/«По счетам» в отчёте прокручиваются внутри карточки.**
+  Измерено в браузере: блок «По счетам» — 448px, таблица 914px; «По категориям» — 448px против
+  645px; список операций — 950px против 1131px. Карточка при этом не переполняется ни на пиксель
+  (переполнение 0px), прокручивается содержимое. Проверка прогонялась на всех пяти экранах при
+  ширинах окна 1280, 1024 и 820px с крупными суммами, длинными названиями счетов и категорий и
+  длинными комментариями — блоков с переполнением не осталось.
+- **`SettingsPage.tsx` и `App.tsx` править не пришлось** — оформление этих экранов полностью
+  определяется классами (`card`, `stack`, `actions`, `banner`, `tag`), которые переписаны в
+  `styles.css`. В плане они были указаны как изменяемые; фактических правок в них нет.
+- **Ряд фильтров получил отдельный класс `.row.filters`:** перенесённый на новую строку фильтр
+  растягивался на всю ширину карточки и выглядел неопрятно. У полей фильтров фиксированная ширина,
+  у полей форм — прежнее поведение с равномерным распределением.
