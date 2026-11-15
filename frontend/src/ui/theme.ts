@@ -1,12 +1,43 @@
 /**
- * Единый источник оформления интерфейса: палитра, тени, радиусы.
+ * Единый источник оформления интерфейса: палитры светлой и тёмной темы, тени, радиусы.
  *
- * Значения выставляются в CSS-переменные на :root при старте приложения (см. applyTheme),
- * поэтому styles.css и компоненты читают одни и те же цвета, а графики (recharts) берут их
- * отсюда напрямую. Двух источников цветов быть не должно — из-за них палитра разъезжается.
+ * Значения выставляются в CSS-переменные на :root (см. applyTheme), поэтому styles.css и
+ * компоненты читают одни и те же цвета, а графики (recharts) берут их отсюда напрямую.
+ * Двух источников цветов быть не должно — из-за них палитра разъезжается.
  */
 
-export const palette = {
+import type { ThemeName } from '../domain/types';
+
+export interface Palette {
+  bg: string;
+  surface: string;
+  surfaceMuted: string;
+  border: string;
+  borderStrong: string;
+  text: string;
+  muted: string;
+  accent: string;
+  accentDark: string;
+  accentSoft: string;
+  income: string;
+  incomeSoft: string;
+  expense: string;
+  expenseSoft: string;
+  transfer: string;
+  transferSoft: string;
+  danger: string;
+  dangerSoft: string;
+  dangerBorder: string;
+  /** Цвет текста на залитой акцентом поверхности. */
+  onAccent: string;
+  /** Затемнение под модальным окном. */
+  overlay: string;
+  /** Цвета секторов диаграммы и точек легенды. */
+  chart: readonly string[];
+  shadow: { sm: string; md: string; lg: string };
+}
+
+const lightPalette: Palette = {
   bg: '#eef1f5',
   surface: '#ffffff',
   surfaceMuted: '#f6f8fa',
@@ -26,30 +57,64 @@ export const palette = {
   danger: '#9b1c31',
   dangerSoft: '#fdecee',
   dangerBorder: '#e2c3c7',
-} as const;
+  onAccent: '#ffffff',
+  overlay: 'rgba(22, 33, 42, 0.45)',
+  chart: ['#1f6f8b', '#2e7d5b', '#d24b3f', '#7a6ba8', '#b8862b', '#4b6bb5', '#5f6b72'],
+  shadow: {
+    sm: '0 1px 2px rgba(22, 33, 42, 0.06)',
+    md: '0 2px 8px rgba(22, 33, 42, 0.08)',
+    lg: '0 12px 32px rgba(22, 33, 42, 0.16)',
+  },
+};
 
-/** Цвета секторов диаграммы и точек легенды. */
-export const chartPalette = [
-  '#1f6f8b',
-  '#2e7d5b',
-  '#d24b3f',
-  '#7a6ba8',
-  '#b8862b',
-  '#4b6bb5',
-  '#5f6b72',
-] as const;
+const darkPalette: Palette = {
+  bg: '#12161a',
+  surface: '#1b2127',
+  surfaceMuted: '#232b33',
+  border: '#2c353e',
+  borderStrong: '#3a4550',
+  text: '#e6ecf1',
+  muted: '#97a3ae',
+  accent: '#5bb3d1',
+  accentDark: '#7cc6de',
+  accentSoft: '#1e3038',
+  income: '#63c398',
+  incomeSoft: '#16302a',
+  expense: '#f0776a',
+  expenseSoft: '#33201f',
+  transfer: '#a89ad4',
+  transferSoft: '#272336',
+  danger: '#f08a95',
+  dangerSoft: '#33201f',
+  dangerBorder: '#4a2a30',
+  onAccent: '#0e1418',
+  overlay: 'rgba(0, 0, 0, 0.6)',
+  chart: ['#5bb3d1', '#63c398', '#f0776a', '#a89ad4', '#d9ab4f', '#8ba6e8', '#9aa5ae'],
+  shadow: {
+    sm: '0 1px 2px rgba(0, 0, 0, 0.35)',
+    md: '0 2px 8px rgba(0, 0, 0, 0.45)',
+    lg: '0 12px 32px rgba(0, 0, 0, 0.6)',
+  },
+};
+
+export const palettes: Record<ThemeName, Palette> = {
+  light: lightPalette,
+  dark: darkPalette,
+};
 
 /**
  * Цвет сектора диаграммы и соответствующей точки легенды по индексу.
- * Первые цвета — из общей палитры, дальше — дополнительные оттенки по «золотому углу»,
+ * Первые цвета — из палитры темы, дальше — дополнительные оттенки по «золотому углу»,
  * чтобы при большом числе категорий цвета не повторялись.
  */
-export function chartColor(index: number): string {
-  if (index < chartPalette.length) {
-    return chartPalette[index];
+export function chartColor(theme: ThemeName, index: number): string {
+  const palette = palettes[theme];
+  if (index < palette.chart.length) {
+    return palette.chart[index];
   }
   const hue = Math.round((index * 137.508) % 360);
-  return `hsl(${hue}, 42%, 38%)`;
+  const lightness = theme === 'dark' ? 58 : 38;
+  return `hsl(${hue}, 42%, ${lightness}%)`;
 }
 
 /**
@@ -97,12 +162,6 @@ export function relativeWidth(text: string): number {
   return width;
 }
 
-export const shadows = {
-  sm: '0 1px 2px rgba(22, 33, 42, 0.06)',
-  md: '0 2px 8px rgba(22, 33, 42, 0.08)',
-  lg: '0 12px 32px rgba(22, 33, 42, 0.16)',
-} as const;
-
 export const radii = {
   sm: '6px',
   md: '10px',
@@ -113,38 +172,47 @@ export const fontFamily =
   "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif";
 
 /** Карта «имя токена → значение CSS-переменной», чтобы styles.css и TS смотрели в одну палитру. */
-const cssVariables: Record<string, string> = {
-  '--bg': palette.bg,
-  '--surface': palette.surface,
-  '--surface-muted': palette.surfaceMuted,
-  '--border': palette.border,
-  '--border-strong': palette.borderStrong,
-  '--text': palette.text,
-  '--muted': palette.muted,
-  '--accent': palette.accent,
-  '--accent-dark': palette.accentDark,
-  '--accent-soft': palette.accentSoft,
-  '--income': palette.income,
-  '--income-soft': palette.incomeSoft,
-  '--expense': palette.expense,
-  '--expense-soft': palette.expenseSoft,
-  '--transfer': palette.transfer,
-  '--transfer-soft': palette.transferSoft,
-  '--danger': palette.danger,
-  '--danger-soft': palette.dangerSoft,
-  '--danger-border': palette.dangerBorder,
-  '--shadow-sm': shadows.sm,
-  '--shadow-md': shadows.md,
-  '--shadow-lg': shadows.lg,
-  '--radius-sm': radii.sm,
-  '--radius-md': radii.md,
-  '--radius-lg': radii.lg,
-  '--font-family': fontFamily,
-};
+function cssVariables(theme: ThemeName): Record<string, string> {
+  const palette = palettes[theme];
+  const variables: Record<string, string> = {
+    '--bg': palette.bg,
+    '--surface': palette.surface,
+    '--surface-muted': palette.surfaceMuted,
+    '--border': palette.border,
+    '--border-strong': palette.borderStrong,
+    '--text': palette.text,
+    '--muted': palette.muted,
+    '--accent': palette.accent,
+    '--accent-dark': palette.accentDark,
+    '--accent-soft': palette.accentSoft,
+    '--income': palette.income,
+    '--income-soft': palette.incomeSoft,
+    '--expense': palette.expense,
+    '--expense-soft': palette.expenseSoft,
+    '--transfer': palette.transfer,
+    '--transfer-soft': palette.transferSoft,
+    '--danger': palette.danger,
+    '--danger-soft': palette.dangerSoft,
+    '--danger-border': palette.dangerBorder,
+    '--on-accent': palette.onAccent,
+    '--overlay': palette.overlay,
+    '--shadow-sm': palette.shadow.sm,
+    '--shadow-md': palette.shadow.md,
+    '--shadow-lg': palette.shadow.lg,
+    '--radius-sm': radii.sm,
+    '--radius-md': radii.md,
+    '--radius-lg': radii.lg,
+    '--font-family': fontFamily,
+  };
 
-/** Выставляет токены оформления в CSS-переменные корневого элемента. */
-export function applyTheme(root: HTMLElement): void {
-  for (const [name, value] of Object.entries(cssVariables)) {
+  return variables;
+}
+
+/** Выставляет токены оформления выбранной темы в CSS-переменные корневого элемента. */
+export function applyTheme(root: HTMLElement, theme: ThemeName): void {
+  for (const [name, value] of Object.entries(cssVariables(theme))) {
     root.style.setProperty(name, value);
   }
+  root.dataset.theme = theme;
+  root.style.colorScheme = theme;
 }

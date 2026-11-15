@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { Account, Category, Operation, Settings } from '../domain/types';
+import type { Account, Category, Operation, Settings, ThemeName } from '../domain/types';
 
 export interface AppState {
   accounts: Account[];
@@ -18,6 +18,10 @@ export interface AppApi extends AppState {
   saveOperation(operation: Operation): void;
   removeOperation(id: string): void;
   saveSettings(settings: Settings): void;
+  /** Включает выбранную тему оформления. */
+  setTheme(theme: ThemeName): void;
+  /** Переключает тему оформления на противоположную. */
+  toggleTheme(): void;
   dismissStorageError(): void;
 }
 

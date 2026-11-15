@@ -107,6 +107,19 @@ describe('LocalStorageRepository', () => {
   });
 
   it('возвращает настройки по умолчанию', () => {
-    expect(repository.getSettings()).toEqual({ currency: 'RUB', version: 1 });
+    expect(repository.getSettings()).toEqual({ currency: 'RUB', theme: 'light', version: 2 });
+  });
+
+  it('сохраняет выбранную тему оформления', () => {
+    repository.saveSettings({ currency: 'EUR', theme: 'dark', version: 2 });
+    expect(repository.getSettings().theme).toBe('dark');
+  });
+
+  it('дочитывает тему из настроек без поля theme', () => {
+    const storage = (globalThis as unknown as { window: { localStorage: Storage } }).window
+      .localStorage;
+    storage.setItem('finance.settings', JSON.stringify({ currency: 'RUB', version: 1 }));
+
+    expect(repository.getSettings()).toEqual({ currency: 'RUB', theme: 'light', version: 2 });
   });
 });

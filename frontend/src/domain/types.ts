@@ -39,9 +39,14 @@ export interface Operation {
   updatedAt: string;
 }
 
+/** Тема оформления интерфейса. */
+export type ThemeName = 'light' | 'dark';
+
 export interface Settings {
   /** Код валюты, по умолчанию RUB */
   currency: string;
+  /** Выбранная тема оформления */
+  theme: ThemeName;
   /** Версия формата хранимых данных — для будущих миграций */
   version: number;
 }

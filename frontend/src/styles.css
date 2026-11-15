@@ -138,6 +138,13 @@ body {
   font-size: var(--text-base);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.card,
+.stat,
+.sidebar {
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 /* --- Каркас --- */
@@ -156,11 +163,26 @@ body {
   flex-shrink: 0;
 }
 
+.sidebar__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
 .sidebar h1 {
   font-size: var(--text-lg);
   font-weight: 700;
   letter-spacing: -0.01em;
-  margin: 0 6px 22px;
+  margin: 0 6px;
+}
+
+.theme-toggle {
+  padding: 6px 10px;
+  font-size: var(--text-base);
+  line-height: 1;
+  border-radius: var(--radius-md);
 }
 
 .sidebar nav {
@@ -564,7 +586,7 @@ button:focus-visible {
 button.primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   box-shadow: var(--shadow-md);
 }
 
@@ -600,7 +622,7 @@ button.link:hover {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(22, 33, 42, 0.45);
+  background: var(--overlay);
   display: flex;
   align-items: center;
   justify-content: center;

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { chartColor, chartPalette, relativeWidth } from '../ui/theme';
+import { applyTheme, chartColor, palettes, relativeWidth } from '../ui/theme';
 
 const styles = readFileSync(resolve(process.cwd(), 'src/styles.css'), 'utf-8');
 
@@ -37,9 +37,30 @@ describe('оформление', () => {
   });
 
   it('даёт разные цвета секторам диаграммы и точкам легенды', () => {
-    const colors = Array.from({ length: 20 }, (_, index) => chartColor(index));
+    const colors = Array.from({ length: 20 }, (_, index) => chartColor('light', index));
 
     expect(new Set(colors).size).toBe(colors.length);
-    expect(colors.slice(0, chartPalette.length)).toEqual([...chartPalette]);
+    expect(colors.slice(0, palettes.light.chart.length)).toEqual([...palettes.light.chart]);
+  });
+
+  it('различает палитры светлой и тёмной темы', () => {
+    expect(palettes.light.bg).not.toBe(palettes.dark.bg);
+    expect(palettes.light.text).not.toBe(palettes.dark.text);
+    expect(palettes.light.chart).not.toEqual(palettes.dark.chart);
+  });
+
+  it('выставляет токены темы в CSS-переменные', () => {
+    const root = document.createElement('div');
+
+    applyTheme(root, 'dark');
+
+    expect(root.dataset.theme).toBe('dark');
+    expect(root.style.getPropertyValue('--bg')).toBe(palettes.dark.bg);
+    expect(root.style.getPropertyValue('--text')).toBe(palettes.dark.text);
+
+    applyTheme(root, 'light');
+
+    expect(root.dataset.theme).toBe('light');
+    expect(root.style.getPropertyValue('--bg')).toBe(palettes.light.bg);
   });
 });

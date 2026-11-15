@@ -1,4 +1,4 @@
-import type { Account, Category, Operation, Settings } from '../domain/types';
+import type { Account, Category, Operation, Settings, ThemeName } from '../domain/types';
 import type { DataRepository } from './repository';
 import { readJson, writeJson } from './storage';
 import seedCategories from './seedCategories.json';
@@ -10,11 +10,21 @@ const KEYS = {
   settings: 'finance.settings',
 } as const;
 
-const DEFAULT_SETTINGS: Settings = { currency: 'RUB', version: 1 };
+const DEFAULT_SETTINGS: Settings = { currency: 'RUB', theme: 'light', version: 2 };
 
 interface SeedCategory {
   name: string;
   kind: 'income' | 'expense';
+}
+
+/** Тема из сохранённых настроек — читается до первого рендера, чтобы не мигала светлая тема. */
+export function readStoredTheme(): ThemeName {
+  try {
+    const stored = readJson<Partial<Settings>>(KEYS.settings, {});
+    return stored.theme === 'dark' ? 'dark' : 'light';
+  } catch {
+    return 'light';
+  }
 }
 
 export class LocalStorageRepository implements DataRepository {
@@ -46,7 +56,12 @@ export class LocalStorageRepository implements DataRepository {
   }
 
   getSettings(): Settings {
-    return readJson<Settings>(KEYS.settings, DEFAULT_SETTINGS);
+    const stored = readJson<Partial<Settings>>(KEYS.settings, {});
+    return {
+      currency: stored.currency || DEFAULT_SETTINGS.currency,
+      theme: stored.theme === 'dark' ? 'dark' : 'light',
+      version: DEFAULT_SETTINGS.version,
+    };
   }
 
   saveAccount(account: Account): void {

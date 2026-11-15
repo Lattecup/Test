@@ -1,14 +1,15 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
-import type { Account, Category, Operation, Settings } from '../domain/types';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import type { Account, Category, Operation, Settings, ThemeName } from '../domain/types';
 import { LocalStorageRepository } from '../data/localStorageRepository';
 import { StorageError } from '../data/repository';
+import { applyTheme } from '../ui/theme';
 import { AppContext, type AppState } from './appContext';
 
 const EMPTY_STATE: AppState = {
   accounts: [],
   categories: [],
   operations: [],
-  settings: { currency: 'RUB', version: 1 },
+  settings: { currency: 'RUB', theme: 'light', version: 2 },
   storageError: null,
 };
 
@@ -54,6 +55,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [reload],
   );
 
+  // Токены темы выставляются в CSS-переменные при смене темы
+  useEffect(() => {
+    applyTheme(document.documentElement, state.settings.theme);
+  }, [state.settings.theme]);
+
   const api = useMemo(
     () => ({
       ...state,
@@ -64,6 +70,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       saveOperation: (operation: Operation) => run(() => repository.saveOperation(operation)),
       removeOperation: (id: string) => run(() => repository.removeOperation(id)),
       saveSettings: (settings: Settings) => run(() => repository.saveSettings(settings)),
+      setTheme: (theme: ThemeName) =>
+        run(() => repository.saveSettings({ ...state.settings, theme })),
+      toggleTheme: () =>
+        run(() =>
+          repository.saveSettings({
+            ...state.settings,
+            theme: state.settings.theme === 'dark' ? 'light' : 'dark',
+          }),
+        ),
       dismissStorageError: () => setState((current) => ({ ...current, storageError: null })),
     }),
     [repository, run, state],

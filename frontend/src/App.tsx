@@ -5,6 +5,7 @@ import { OperationsPage } from './features/operations/OperationsPage';
 import { ReportPage } from './features/report/ReportPage';
 import { SettingsPage } from './features/settings/SettingsPage';
 import { useApp } from './state/appContext';
+import { ThemeToggle } from './ui/ThemeToggle';
 
 export default function App() {
   const { storageError, dismissStorageError } = useApp();
@@ -12,7 +13,10 @@ export default function App() {
   return (
     <div className="app">
       <aside className="sidebar">
-        <h1>Учёт денег</h1>
+        <div className="sidebar__head">
+          <h1>Учёт денег</h1>
+          <ThemeToggle />
+        </div>
         <nav>
           <NavLink to="/operations">Операции</NavLink>
           <NavLink to="/accounts">Счета</NavLink>

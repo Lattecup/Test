@@ -167,6 +167,17 @@ describe('приложение', () => {
     expect(incomeCell?.tagName).toBe('TD');
   });
 
+  it('переключает тему оформления и сохраняет выбор', () => {
+    renderApp('/operations');
+
+    const toggle = screen.getByRole('button', { name: 'Включить тёмную тему' });
+    fireEvent.click(toggle);
+
+    expect(document.documentElement.dataset.theme).toBe('dark');
+    expect(window.localStorage.getItem('finance.settings')).toContain('"theme":"dark"');
+    expect(screen.getByRole('button', { name: 'Включить светлую тему' })).toBeTruthy();
+  });
+
   it('подбирает кегль итоговой суммы под её длину и хранит полное значение в подсказке', () => {
     renderApp('/accounts');
     fireEvent.click(screen.getByRole('button', { name: 'Добавить счёт' }));

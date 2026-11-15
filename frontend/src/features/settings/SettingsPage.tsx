@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useApp } from '../../state/appContext';
+import type { ThemeName } from '../../domain/types';
 import { Field } from '../../ui/Field';
 
 export function SettingsPage() {
-  const { settings, saveSettings } = useApp();
+  const { settings, saveSettings, setTheme } = useApp();
   const [currency, setCurrency] = useState(settings.currency);
   const [saved, setSaved] = useState(false);
 
@@ -11,6 +12,19 @@ export function SettingsPage() {
     <>
       <div className="page-header">
         <h2>Настройки</h2>
+      </div>
+
+      <div className="card" style={{ maxWidth: 420 }}>
+        <h3>Оформление</h3>
+        <Field label="Тема">
+          <select
+            value={settings.theme}
+            onChange={(event) => setTheme(event.target.value as ThemeName)}
+          >
+            <option value="light">Светлая</option>
+            <option value="dark">Тёмная</option>
+          </select>
+        </Field>
       </div>
 
       <div className="card" style={{ maxWidth: 420 }}>

@@ -24,7 +24,7 @@ import { Badge } from '../../ui/Badge';
 import { DataTable } from '../../ui/DataTable';
 import { Field } from '../../ui/Field';
 import { Truncated } from '../../ui/Truncated';
-import { chartColor, palette, shadows } from '../../ui/theme';
+import { chartColor, palettes } from '../../ui/theme';
 import { exportReportToCsv, exportReportToExcel } from './export';
 
 export function ReportPage() {
@@ -54,11 +54,14 @@ export function ReportPage() {
   const moneyClass = (value: number, tone: 'income' | 'expense' | 'transfer'): string =>
     value === 0 ? '' : `money-cell--${tone}`;
 
+  // Цвета берутся из палитры текущей темы: график перекрашивается вместе с интерфейсом
+  const palette = palettes[settings.theme];
   const tooltipStyle = {
     background: palette.surface,
     border: `1px solid ${palette.border}`,
     borderRadius: '10px',
-    boxShadow: shadows.md,
+    boxShadow: palette.shadow.md,
+    color: palette.text,
   };
 
   return (
@@ -421,7 +424,7 @@ export function ReportPage() {
                     strokeWidth={2}
                   >
                     {expenseByCategory.map((entry, index) => (
-                      <Cell key={entry.name} fill={chartColor(index)} />
+                      <Cell key={entry.name} fill={chartColor(settings.theme, index)} />
                     ))}
                   </Pie>
                   <Tooltip contentStyle={tooltipStyle} />
@@ -432,7 +435,7 @@ export function ReportPage() {
                   <span className="legend-item" key={entry.name}>
                     <span
                       className="legend-dot"
-                      style={{ background: chartColor(index) }}
+                      style={{ background: chartColor(settings.theme, index) }}
                     />
                     {entry.name}
                   </span>
