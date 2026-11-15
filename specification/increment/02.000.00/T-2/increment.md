@@ -2,7 +2,7 @@
 
 ## Статус
 
-К выполнению
+Выполнено
 
 ## Контекст
 
@@ -79,9 +79,10 @@
   денежной ячейке рябили бы). Знаки `+` / `−` / `→` сохраняются везде: смысл операции не должен
   читаться только цветом.
 - **Суммы — всегда в полном формате, без обрезки и без переноса**: если сумма не помещается, кегль
-  в этой ячейке уменьшается. Реализуется через контейнерные запросы: `.stat` объявляется
-  контейнером (`container-type: inline-size`), а `.stat .value` получает `font-size: clamp(14px, 9cqi,
-  22px)` — размер зависит от ширины самой карточки, а не от ширины окна.
+  в этой ячейке уменьшается. Кегль подбирается по ширине самой карточки (контейнерный запрос, а не
+  медиазапрос: `.stat` объявляется контейнером через `container-type: inline-size`) и по длине
+  самого значения — ширина строки в долях кегля считается в `ui/theme.ts` и передаётся в
+  CSS-переменную `--amount-width`.
 - **Переполнение лечится прокруткой внутри блока, а не перестановкой блоков**: таблицы оборачиваются в
   `.table-scroll` (`overflow-x: auto`), сама карточка и её границы не меняются. Компоновка экранов
   сохраняется — этого прямо требует `intent.md`.
@@ -167,7 +168,8 @@ export const radii = { sm: '6px', md: '10px', lg: '14px' } as const;
   td.num, th.num { white-space: nowrap; }   /* цифры не переносятся — как есть */
   .truncate { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .stat { container-type: inline-size; }
-  .stat .value { font-size: clamp(14px, 9cqi, 22px); white-space: nowrap; }
+  .stat .value { white-space: nowrap; }
+  .stat .value .amount { font-size: clamp(13px, calc((100cqi - 8px) / var(--amount-width, 10)), 24px); }
   ```
 - `.legend span::before` перестаёт опираться на незадаваемый `--dot-color` — цвет точки задаётся явно.
 
@@ -249,6 +251,7 @@ interface BadgeProps { variant: BadgeVariant; children: ReactNode; }
 ```
 frontend/package.json
 frontend/package-lock.json
+frontend/src/assets/fonts/Inter-LICENSE.txt
 frontend/src/assets/fonts/Inter-cyrillic-400.woff2
 frontend/src/assets/fonts/Inter-cyrillic-500.woff2
 frontend/src/assets/fonts/Inter-cyrillic-600.woff2
@@ -257,10 +260,13 @@ frontend/src/assets/fonts/Inter-latin-400.woff2
 frontend/src/assets/fonts/Inter-latin-500.woff2
 frontend/src/assets/fonts/Inter-latin-600.woff2
 frontend/src/assets/fonts/Inter-latin-700.woff2
-frontend/src/assets/fonts/Inter-LICENSE.txt
+frontend/src/assets/fonts/Inter-latin-ext-400.woff2
+frontend/src/assets/fonts/Inter-latin-ext-500.woff2
+frontend/src/assets/fonts/Inter-latin-ext-600.woff2
+frontend/src/assets/fonts/Inter-latin-ext-700.woff2
 frontend/src/ui/theme.ts
-frontend/src/ui/Badge.tsx
 frontend/src/ui/Amount.tsx
+frontend/src/ui/Badge.tsx
 frontend/src/ui/DataTable.tsx
 frontend/src/ui/Truncated.tsx
 frontend/src/styles.css
@@ -270,7 +276,14 @@ frontend/src/features/accounts/AccountsPage.tsx
 frontend/src/features/categories/CategoriesPage.tsx
 frontend/src/features/report/ReportPage.tsx
 frontend/src/__tests__/app.test.tsx
+frontend/src/__tests__/theme.test.ts
+specification/absolut/01-personal-finance/design.md
+specification/absolut/01-personal-finance/structure.md
+specification/absolut/01-personal-finance/index.md
 specification/increment/02.000.00/T-2/increment.md
+specification/increment/02.000.00/T-2/index.md
+specification/increment/02.000.00/T-2/intent.md
+specification/increment/02.000.00/T-2/review-report.md
 ```
 
 ## Обоснование решений по результатам разработки
@@ -283,14 +296,28 @@ specification/increment/02.000.00/T-2/increment.md
 - **Файлы шрифта взяты из npm-пакета `@fontsource/inter` (SIL Open Font License) и положены в
   `frontend/src/assets/fonts/`.** Пакет оставлен в `devDependencies`: приложение не тянет шрифт из
   сети, но исходные файлы воспроизводимы и обновляемы одной командой. В репозиторий попали только
-  нужные начертания (400/500/600/700) и два подмножества — кириллица и латиница: без кириллицы русские
-  подписи откатились бы на системный шрифт.
+  нужные начертания (400/500/600/700) и три подмножества — кириллица, латиница и латиница с
+  добавками (в последнем есть знак рубля): без кириллицы русские подписи откатились бы на системный
+  шрифт. Подмножества объявлены с разными `unicode-range` — без них браузер выбрал бы первое
+  объявление (кириллицу) для всех символов, и цифры с валютой ушли бы в запасной системный шрифт,
+  а табличные цифры перестали бы работать.
 - **Кегль итоговой суммы уменьшается контейнерным запросом, а не медиазапросом.** Медиазапрос реагирует
   на ширину окна, а карточки итогов стоят в сетке разной ширины (`.grid.four` — четыре колонки,
   `.grid.two` — две), поэтому одинаковая сумма в разных карточках требовала бы разного кегля.
-  `container-type: inline-size` на `.stat` и `font-size: clamp(15px, 9cqi, 24px)` на значении решают
-  это по ширине самой карточки; проверено — на карточке шириной 274px сумма «4 938 271,56 RUB»
-  укладывается в 17,73px.
+  `container-type: inline-size` на `.stat` и `font-size: clamp(13px, calc((100cqi - 8px) /
+  var(--amount-width, 10)), 24px)` на значении решают это по ширине самой карточки и по длине
+  значения: ширина строки в долях кегля считается по метрикам самого Inter (табличная цифра
+  0.6484em, пробел 0.2812em, запятая 0.2881em). Проверено: в карточке шириной 235px (внутренняя
+  ширина 199px) сумма «123 456 789,01 RUB» укладывается в 19px, а «4 938 271,56 RUB» — в 24px.
+  Полное значение доступно в подсказке, даже если кегль уменьшился.
+- **Плашки в таблицах отчёта подложкой красят саму ячейку, а не число.** Класс `money-cell--*`
+  задаётся `<td>`, а не строчному элементу с суммой: у инлайн-элемента нет отступов, и фон покрывал
+  бы только прямоугольник за цифрами.
+- **Цвета секторов диаграммы не повторяются.** Базовые семь цветов берутся из общей палитры, для
+  следующих категорий добавляются оттенки по «золотому углу»; сектор и точка легенды берут цвет из
+  одной функции, поэтому совпадение гарантировано.
+- **Пустое состояние таблиц обрабатывается в `DataTable`**, а не в каждом экране: обёртка считает
+  строки в `tbody` и показывает сообщение вместо пустой таблицы.
 - **Встроенная легенда `recharts` заменена на собственную.** Встроенная рисует иконку каждого элемента
   одним цветом из палитры библиотеки, задать ей цвет по категории нельзя — именно поэтому точки
   легенды раньше не совпадали с секторами диаграммы. Собственная легенда берёт цвета из `theme.ts`
