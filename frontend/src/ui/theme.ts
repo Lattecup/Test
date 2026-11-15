@@ -39,6 +39,64 @@ export const chartPalette = [
   '#5f6b72',
 ] as const;
 
+/**
+ * Цвет сектора диаграммы и соответствующей точки легенды по индексу.
+ * Первые цвета — из общей палитры, дальше — дополнительные оттенки по «золотому углу»,
+ * чтобы при большом числе категорий цвета не повторялись.
+ */
+export function chartColor(index: number): string {
+  if (index < chartPalette.length) {
+    return chartPalette[index];
+  }
+  const hue = Math.round((index * 137.508) % 360);
+  return `hsl(${hue}, 42%, 38%)`;
+}
+
+/**
+ * Ширина символов Inter в долях кегля — нужна, чтобы подобрать кегль суммы так, чтобы
+ * значение поместилось в карточку целиком. Табличные цифры (font-variant-numeric: tabular-nums)
+ * имеют одинаковую ширину 0.6484em.
+ */
+const GLYPH_WIDTHS: Record<string, number> = {
+  ' ': 0.2812,
+  '\u00A0': 0.2812,
+  '\u202F': 0.2812,
+  ',': 0.2881,
+  '.': 0.2881,
+  '-': 0.34,
+  '+': 0.5859,
+  '\u2212': 0.5859,
+  '\u2192': 0.9,
+  '\u20BD': 0.55,
+};
+
+const DIGIT_WIDTH = 0.6484;
+const UPPERCASE_WIDTH = 0.7;
+const LOWERCASE_WIDTH = 0.58;
+const OTHER_WIDTH = 0.62;
+
+/** Приблизительная ширина строки в долях кегля. */
+export function relativeWidth(text: string): number {
+  let width = 0;
+
+  for (const char of text) {
+    const known = GLYPH_WIDTHS[char];
+    if (known !== undefined) {
+      width += known;
+    } else if (char >= '0' && char <= '9') {
+      width += DIGIT_WIDTH;
+    } else if (char >= 'A' && char <= 'Z') {
+      width += UPPERCASE_WIDTH;
+    } else if (char >= 'a' && char <= 'z') {
+      width += LOWERCASE_WIDTH;
+    } else {
+      width += OTHER_WIDTH;
+    }
+  }
+
+  return width;
+}
+
 export const shadows = {
   sm: '0 1px 2px rgba(22, 33, 42, 0.06)',
   md: '0 2px 8px rgba(22, 33, 42, 0.08)',
@@ -83,10 +141,6 @@ const cssVariables: Record<string, string> = {
   '--radius-lg': radii.lg,
   '--font-family': fontFamily,
 };
-
-chartPalette.forEach((color, index) => {
-  cssVariables[`--chart-${index + 1}`] = color;
-});
 
 /** Выставляет токены оформления в CSS-переменные корневого элемента. */
 export function applyTheme(root: HTMLElement): void {

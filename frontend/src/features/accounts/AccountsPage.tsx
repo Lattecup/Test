@@ -6,7 +6,6 @@ import { useApp } from '../../state/appContext';
 import { Amount } from '../../ui/Amount';
 import { Badge } from '../../ui/Badge';
 import { DataTable } from '../../ui/DataTable';
-import { EmptyState } from '../../ui/EmptyState';
 import { Field } from '../../ui/Field';
 import { Modal } from '../../ui/Modal';
 import { Truncated } from '../../ui/Truncated';
@@ -95,61 +94,57 @@ export function AccountsPage() {
       </div>
 
       <div className="card">
-        {accounts.length === 0 ? (
-          <EmptyState message="Счетов пока нет. Заведите первый счёт — например, «Карта»." />
-        ) : (
-          <DataTable>
-            <thead>
-              <tr>
-                <th>Название</th>
-                <th>Тип</th>
-                <th className="num">Начальный остаток</th>
-                <th className="num">Текущий остаток</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {accounts.map((account) => {
-                const balance = balances.get(account.id) ?? 0;
+        <DataTable emptyMessage="Счетов пока нет. Заведите первый счёт — например, «Карта».">
+          <thead>
+            <tr>
+              <th>Название</th>
+              <th>Тип</th>
+              <th className="num">Начальный остаток</th>
+              <th className="num">Текущий остаток</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {accounts.map((account) => {
+              const balance = balances.get(account.id) ?? 0;
 
-                return (
-                  <tr key={account.id}>
-                    <td>
-                      <Truncated value={account.name} maxWidth={220} />
-                    </td>
-                    <td>
-                      {account.type ? (
-                        <Badge variant="neutral">{account.type}</Badge>
-                      ) : (
-                        <span className="amount--neutral">—</span>
-                      )}
-                    </td>
-                    <td className="num">
-                      <Amount minor={account.initialBalance} currency={settings.currency} />
-                    </td>
-                    <td className="num">
-                      <Amount
-                        minor={balance}
-                        currency={settings.currency}
-                        tone={balance < 0 ? 'expense' : 'neutral'}
-                      />
-                    </td>
-                    <td className="num">
-                      <div className="actions" style={{ justifyContent: 'flex-end' }}>
-                        <button className="link" onClick={() => openEdit(account)}>
-                          Изменить
-                        </button>
-                        <button className="link" onClick={() => setPendingRemoval(account)}>
-                          Удалить
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
+              return (
+                <tr key={account.id}>
+                  <td>
+                    <Truncated value={account.name} maxWidth={220} />
+                  </td>
+                  <td>
+                    {account.type ? (
+                      <Badge variant="neutral">{account.type}</Badge>
+                    ) : (
+                      <span className="amount--neutral">—</span>
+                    )}
+                  </td>
+                  <td className="num">
+                    <Amount minor={account.initialBalance} currency={settings.currency} />
+                  </td>
+                  <td className="num">
+                    <Amount
+                      minor={balance}
+                      currency={settings.currency}
+                      tone={balance < 0 ? 'expense' : 'neutral'}
+                    />
+                  </td>
+                  <td className="num">
+                    <div className="actions" style={{ justifyContent: 'flex-end' }}>
+                      <button className="link" onClick={() => openEdit(account)}>
+                        Изменить
+                      </button>
+                      <button className="link" onClick={() => setPendingRemoval(account)}>
+                        Удалить
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
           </DataTable>
-        )}
       </div>
 
       {form ? (

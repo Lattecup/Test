@@ -2,7 +2,6 @@ import { useState } from 'react';
 import type { Category, CategoryKind } from '../../domain/types';
 import { useApp } from '../../state/appContext';
 import { DataTable } from '../../ui/DataTable';
-import { EmptyState } from '../../ui/EmptyState';
 import { Field } from '../../ui/Field';
 import { Modal } from '../../ui/Modal';
 import { Truncated } from '../../ui/Truncated';
@@ -56,11 +55,8 @@ export function CategoriesPage() {
 
   const renderTable = (kind: CategoryKind) => {
     const rows = categories.filter((category) => category.kind === kind);
-    if (rows.length === 0) {
-      return <EmptyState message="Категорий пока нет." />;
-    }
     return (
-      <DataTable>
+      <DataTable emptyMessage="Категорий пока нет.">
         <thead>
           <tr>
             <th>Название</th>

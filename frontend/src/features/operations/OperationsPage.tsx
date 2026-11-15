@@ -7,7 +7,6 @@ import { useApp } from '../../state/appContext';
 import { Amount } from '../../ui/Amount';
 import { Badge, type BadgeVariant } from '../../ui/Badge';
 import { DataTable } from '../../ui/DataTable';
-import { EmptyState } from '../../ui/EmptyState';
 import { Field } from '../../ui/Field';
 import { Modal } from '../../ui/Modal';
 import { Truncated } from '../../ui/Truncated';
@@ -237,79 +236,75 @@ export function OperationsPage() {
       </div>
 
       <div className="card">
-        {filtered.length === 0 ? (
-          <EmptyState message="За выбранный период операций нет." />
-        ) : (
-          <DataTable>
-            <thead>
-              <tr>
-                <th>Дата</th>
-                <th>Тип</th>
-                <th className="num">Сумма</th>
-                <th>Счёт</th>
-                <th>Категория</th>
-                <th>Комментарий</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((operation) => {
-                const source = operation.accountId
-                  ? (accountName.get(operation.accountId) ?? 'Без счёта')
-                  : 'Без счёта';
-                const target =
-                  operation.type === 'transfer' && operation.targetAccountId
-                    ? (accountName.get(operation.targetAccountId) ?? 'Без счёта')
-                    : null;
-                const category = operation.categoryId
-                  ? (categoryName.get(operation.categoryId) ?? 'Без категории')
-                  : 'Без категории';
+        <DataTable emptyMessage="За выбранный период операций нет.">
+          <thead>
+            <tr>
+              <th>Дата</th>
+              <th>Тип</th>
+              <th className="num">Сумма</th>
+              <th>Счёт</th>
+              <th>Категория</th>
+              <th>Комментарий</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((operation) => {
+              const source = operation.accountId
+                ? (accountName.get(operation.accountId) ?? 'Без счёта')
+                : 'Без счёта';
+              const target =
+                operation.type === 'transfer' && operation.targetAccountId
+                  ? (accountName.get(operation.targetAccountId) ?? 'Без счёта')
+                  : null;
+              const category = operation.categoryId
+                ? (categoryName.get(operation.categoryId) ?? 'Без категории')
+                : 'Без категории';
 
-                return (
-                  <tr key={operation.id}>
-                    <td>{formatDate(operation.date)}</td>
-                    <td>
-                      <Badge variant={TYPE_VARIANTS[operation.type]}>
-                        {TYPE_LABELS[operation.type]}
-                      </Badge>
-                    </td>
-                    <td className="num">
-                      <Amount
-                        minor={operation.amount}
-                        currency={settings.currency}
-                        tone={TYPE_VARIANTS[operation.type]}
-                        prefix={TYPE_SIGNS[operation.type]}
-                      />
-                    </td>
-                    <td>
-                      {target ? (
-                        <Truncated value={`${source} → ${target}`} maxWidth={200} />
-                      ) : (
-                        <Truncated value={source} maxWidth={200} />
-                      )}
-                    </td>
-                    <td>
-                      <Truncated value={category} maxWidth={160} />
-                    </td>
-                    <td>
-                      <Truncated value={operation.comment} maxWidth={220} />
-                    </td>
-                    <td className="num">
-                      <div className="actions" style={{ justifyContent: 'flex-end' }}>
-                        <button className="link" onClick={() => openEdit(operation)}>
-                          Изменить
-                        </button>
-                        <button className="link" onClick={() => setPendingRemoval(operation)}>
-                          Удалить
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
+              return (
+                <tr key={operation.id}>
+                  <td>{formatDate(operation.date)}</td>
+                  <td>
+                    <Badge variant={TYPE_VARIANTS[operation.type]}>
+                      {TYPE_LABELS[operation.type]}
+                    </Badge>
+                  </td>
+                  <td className="num">
+                    <Amount
+                      minor={operation.amount}
+                      currency={settings.currency}
+                      tone={TYPE_VARIANTS[operation.type]}
+                      prefix={TYPE_SIGNS[operation.type]}
+                    />
+                  </td>
+                  <td>
+                    {target ? (
+                      <Truncated value={`${source} → ${target}`} maxWidth={200} />
+                    ) : (
+                      <Truncated value={source} maxWidth={200} />
+                    )}
+                  </td>
+                  <td>
+                    <Truncated value={category} maxWidth={160} />
+                  </td>
+                  <td>
+                    <Truncated value={operation.comment} maxWidth={220} />
+                  </td>
+                  <td className="num">
+                    <div className="actions" style={{ justifyContent: 'flex-end' }}>
+                      <button className="link" onClick={() => openEdit(operation)}>
+                        Изменить
+                      </button>
+                      <button className="link" onClick={() => setPendingRemoval(operation)}>
+                        Удалить
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
           </DataTable>
-        )}
       </div>
 
       {form ? (

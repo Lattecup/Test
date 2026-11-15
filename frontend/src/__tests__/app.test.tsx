@@ -163,5 +163,24 @@ describe('приложение', () => {
     const incomeCell = document.querySelector('.money-cell--income');
     expect(incomeCell).toBeTruthy();
     expect(incomeCell?.textContent).toContain('500');
+    // Подложка красится по ячейке, а не по одному числу внутри неё
+    expect(incomeCell?.tagName).toBe('TD');
+  });
+
+  it('подбирает кегль итоговой суммы под её длину и хранит полное значение в подсказке', () => {
+    renderApp('/accounts');
+    fireEvent.click(screen.getByRole('button', { name: 'Добавить счёт' }));
+    fireEvent.change(screen.getByLabelText('Название'), { target: { value: 'Карта' } });
+    fireEvent.change(screen.getByLabelText('Начальный остаток'), { target: { value: '1000' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Сохранить' }));
+
+    fireEvent.click(screen.getByRole('link', { name: 'Отчёт' }));
+
+    const total = document.querySelector('.stat .value .amount');
+    expect(total).toBeTruthy();
+    // Ширина значения в долях кегля — по ней CSS подбирает кегль под ширину карточки
+    expect(total?.getAttribute('style')).toContain('--amount-width');
+    // Полное значение доступно в подсказке, даже если кегль уменьшился
+    expect(total?.getAttribute('title')).toMatch(/\d,\d{2} RUB/);
   });
 });
